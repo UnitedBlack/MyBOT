@@ -1,6 +1,9 @@
 import sqlite3
 
-def create_or_connect_database(db_file):
+db_file = "/home/shodan/Documents/Projects/WB/sql_data/WB.sqlite"
+
+def create_or_connect_database():
+    global connection
     connection = sqlite3.connect(db_file)
     cursor = connection.cursor()
     cursor.execute('''
@@ -17,9 +20,8 @@ def create_or_connect_database(db_file):
             color TEXT
             )
             ''')
-    return connection
     
-def insert_product(connection, product_data):
+def insert_product(product_data):
     try:
         cursor = connection.cursor()
 
@@ -36,19 +38,29 @@ def insert_product(connection, product_data):
     except sqlite3.Error as e:
         print("Ошибка при добавлении данных:", e)
         
-    
+
+def check_product(url_to_check):
+    cursor = connection.cursor()
+    cursor.execute('''
+    SELECT url FROM products
+    ''')
+    rows = cursor.fetchall()
+    for row in rows:
+        if url_to_check in row: return False
+    return True
+        
+        
 if __name__ == "__main__":
     product_data = {
-            "name": "Примерный продукт",
-            "discount_price": 19,
-            "price": 29,
-            "star_rating": 4,
-            "url": "http://example.com/product/123",
-            "pic_url": "http://example.com/product/123.jpg",
-            "composition": "Состав продукта",
-            "size": "M",
-            "color": "Синий"
+        "name": "Примерный продукт", "discount_price": 19, "price": 29,
+        "star_rating": 4, "url": "http://example.com/product/123",
+        "pic_url": "http://example.com/product/123.jpg",
+        "composition": "Состав продукта", "size": "M",
+        "color": "Синий"
         }
-    db_file = "/home/shodan/Documents/Projects/WB/sql_data/WB.sqlite"
-    connection = create_or_connect_database(db_file)
-    insert_product(connection, product_data)
+    create_or_connect_database()
+    # insert_product(connection, product_data)
+    print(check_product())
+else:
+    create_or_connect_database()
+    # url_to_check = product_data['url']
