@@ -22,14 +22,19 @@ def operate_image(video):
 
 def parse_wildberries(list_to_return = []):
     logger.debug("Parsing wildberries cards")
-    with open("url_list.txt", "r") as file:
-        urls = file.read().splitlines()
+    with open("url_list.txt", "r") as file: urls = file.read().replace(",","").splitlines()
     logger.debug(f"Число вб страниц: {len(urls)}")
     for url in urls:
         try:
-            page.goto(url, wait_until='domcontentloaded')
+            in_database = sql.is_product_in_database(url)
+            if in_database: 
+                logger.warning(f"{url} Product in DB")
+                continue
+            logger.info(f"{url} not in DB")
+            
+            page.goto(url)
             page.wait_for_selector('h1')
-            time.sleep(1)
+            time.sleep(0.5)
             
             try: 
                 sold_out = page.query_selector('//span[@class="sold-out-product__text"]').is_visible()
@@ -39,8 +44,8 @@ def parse_wildberries(list_to_return = []):
             if sold_out: continue
             
             name = page.query_selector("h1").text_content()
-            price = page.query_selector('//ins[@class="price-block__final-price"]').text_content().replace(' ', '').replace('₽', '')
-            discount_price = page.query_selector('//del[@class="price-block__old-price j-wba-card-item-show"]').text_content().replace(' ', '').replace('₽', '')
+            price = page.query_selector('//ins[@class="price-block__final-price"]').text_content().replace('₽', '').replace(' ', '').replace('\xa0', '')
+            discount_price = page.query_selector('//del[@class="price-block__old-price j-wba-card-item-show"]').text_content().replace('₽', '').replace(' ', '').replace('\xa0', '')
             try:
                 star_rating = page.query_selector('//span[@class="product-review__rating address-rate-mini address-rate-mini--sm"]').text_content()
             except(AttributeError):
@@ -51,9 +56,14 @@ def parse_wildberries(list_to_return = []):
             except(AttributeError):
                 color = False
             try:
-                composition = page.query_selector('//p[@class="collapsable__content j-consist-popup"]').text_content().replace('Состав:', '')[41:]
+                composition = page.query_selector('//p[@class="collapsable__content j-consist-popup"]').text_content().replace('Состав:', '').strip()
             except(AttributeError):
                 composition = False
+            
+            try:
+                size = ...
+            except(AttributeError):
+                size = False
                 
             video_element = page.query_selector('//video[@class="wb-player__video j-wb-video-player"]')
             is_exist_video = not (video_element and not video_element.is_hidden())    
@@ -72,26 +82,24 @@ def parse_wildberries(list_to_return = []):
                 "size": "",
                 "color": color,
                 }
-            
-            super_list.append(data)
+            sql.insert_product(data)
+            # super_list.append(data)
         except(AttributeError) as e:
             logger.critical(f"Error {e} in url \n{url}")
-            exit()
+            continue
         
     # a = sql.check_product(data)
     # if not a : sql.insert_product(data)
     # print(a)
     
 
-def parse_main_page(url_list = []):
+def parse_main_page():
     logger.debug("Parsing main page...")
     with open("url_list.txt", "r") as file:
-        txt_urls = file.read().splitlines()
+        txt_urls = file.read()
         
     skidka_link = "https://skidka7.com/discount/cwomen/all"
-    page.goto(skidka_link)
-
-    for current_page in range(1, 16):
+    for current_page in range(1, 10):
         logger.info(f"Current page: {current_page}")
         url = f"{skidka_link}?page={current_page}"
         page.goto(url)
@@ -101,13 +109,9 @@ def parse_main_page(url_list = []):
             sold_out = (sold_out_element and sold_out_element.is_visible())
             if sold_out: continue
             url = card.query_selector('//div[@class="panel panel-flat padding9"]/a[1]').get_attribute("href")
-            if url in txt_urls:
-                continue
-            else:
-                url_list.append(url)
-    with open("url_list.txt", "w") as file:     
-        for item in url_list:
-            file.write(item + "," + "\n")
+            if url not in txt_urls:
+                logger.debug("Collecting new products")
+                with open("url_list.txt", "a") as file: file.write(url + "," + "\n")
         
         
 def initialize():
@@ -119,7 +123,6 @@ def initialize():
         # wb_card_urls = parse_main_page()
         parse_wildberries()
         
-
 
 if __name__ == "__main__":
     logger = logging.getLogger('WB')
