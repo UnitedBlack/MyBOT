@@ -26,6 +26,11 @@ bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher()
 me = ["333253716", "1074422484"]
 
+
+def add_callback_data_to_db():
+    return "Added"
+
+
 def wbparse():
     all_products = sql.get_all_products()
     return all_products
@@ -33,11 +38,12 @@ def wbparse():
 
 @dp.message(Command("update"))
 async def send_wbparse(message: types.Message):
-    builder = InlineKeyboardBuilder()   
     wbparse_result = wbparse()
-    message_id = message.message_id  # Получаем ID сообщения
-    builder.button(text="Запостить", callback_data=f"post_{message_id}")  # Добавляем ID сообщения в callback_data
+    # message_id = message.message_id  # Получаем ID сообщения
+    # builder.button(text="Лайк", callback_data=f"like_{message_id}")  # Добавляем ID сообщения в callback_data
+    # builder.button(text="Дизлайк", callback_data=f"likedis_{message_id}")
     for item in wbparse_result:
+        builder = InlineKeyboardBuilder()   
         name = item.get("name")
         discount_price = item.get("discount_price")
         price = item.get("price")
@@ -52,19 +58,28 @@ async def send_wbparse(message: types.Message):
         post += f"\n🌟Рейтинг: {hbold(star_rating)}" if star_rating else ""
         post += f"\n🔬Состав: {hbold(composition)}" if composition else ""
         post += f"\n🌈Цвет: {hbold(color)}" if color else ""
-        post += f"\n🔗Купить 👇 {url}" if url else ""
-        # post = \
-        # f"🎁{hbold(name)}\n💵Цена: {hstrikethrough(price)}₽ {hbold(discount_price)}₽\n🌟Рейтинг: {hbold(star_rating)}\nКупить: {url}"
+        post += f"\n🔗Купить: {url}" if url else ""
+
         time.sleep(0.3)
-        await bot.send_message(message.chat.id, post, reply_markup=builder.as_markup())
+        sent_message = await bot.send_message(message.chat.id, post)
+        message_id = sent_message.message_id
+        builder.button(text="Лайк", callback_data=f"post_{message_id}")  
+        builder.button(text="Дизлайк", callback_data=f"post_{message_id}")
+        # Обновляем клавиатуру сообщения
+        await bot.edit_message_reply_markup(chat_id=message.chat.id, message_id=message_id, reply_markup=builder.as_markup())
 
-
+    
 @dp.callback_query(lambda c: c.data.startswith('post'))
 async def process_callback_post(callback_query: types.CallbackQuery):
     message_id = callback_query.data.split("_")[1]  # Извлекаем ID сообщения из callback_data
+    button_type = callback_query.data.split("_")[0]  # Извлекаем тип кнопки из callback_data
+    print(button_type)
     await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, f'Сообщение запощено! ID сообщения: {message_id}')
-    
+    if button_type == 'like':
+        a = add_callback_data_to_db()
+        print(a)
+    await bot.send_message(callback_query.from_user.id, f'ID сообщения: {message_id}')
+    # asd = await bot.copy_message(from_chat_id=callback_query.from_user.id, message_id=message_id)
     
 async def main():
     await dp.start_polling(bot)
@@ -87,3 +102,10 @@ if __name__ == '__main__':
 #     # Здесь может быть ваш код для обработки нажатия на кнопку "Запостить"
 #     await bot.answer_callback_query(callback_query.id)
 #     await bot.send_message(callback_query.from_user.id, 'Сообщение запощено!')
+
+# @dp.callback_query(lambda c: c.data.startswith('post'))
+# async def process_callback_post(callback_query: types.CallbackQuery):
+#     message_id = callback_query.data.split("_")[1]  # Извлекаем ID сообщения из callback_data
+#     await bot.answer_callback_query(callback_query.id)
+#     await bot.send_message(callback_query.from_user.id, f'Сообщение запощено! ID сообщения: {message_id}')
+# await bot.send_message(message.chat.id, post, reply_markup=builder.as_markup())
