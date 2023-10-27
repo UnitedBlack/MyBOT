@@ -1,0 +1,242 @@
+[<Message {"message_id": 8176, "from": {"id":
+6616429815, "is_bot": true, "first_name":
+"Scrapy", "username": "toseekbot"}, "chat": {"id":
+333253716, "first_name": "Narberal", "last_name":
+"Γάμμα", "username": "ShodanAI", "type":
+"private"}, "date": 1698346400, "media_group_id":
+"13586684800888618", "photo": [{"file_id": "AgACAg
+QAAxkDAAIf8GU6i3CS9mnN5I53EQXjAqEFLPLmAAKGsjEb97Cl
+UWBnBT-EBf92AQADAgADcwADMAQ", "file_unique_id":
+"AQADhrIxG_ewpVF4", "file_size": 1411, "width":
+67,  "height": 90}, {"file_id": "AgACAgQAAxkDAAIf8
+GU6i3CS9mnN5I53EQXjAqEFLPLmAAKGsjEb97ClUWBnBT-
+EBf92AQADAgADbQADMAQ", "file_unique_id":
+"AQADhrIxG_ewpVFy", "file_size": 16849, "width":
+240, "height": 320}, {"file_id": "AgACAgQAAxkDAAIf
+8GU6i3CS9mnN5I53EQXjAqEFLPLmAAKGsjEb97ClUWBnBT-
+EBf92AQADAgADeAADMAQ", "file_unique_id":
+"AQADhrIxG_ewpVF9", "file_size": 83424, "width":
+600, "height": 800}, {"file_id": "AgACAgQAAxkDAAIf
+8GU6i3CS9mnN5I53EQXjAqEFLPLmAAKGsjEb97ClUWBnBT-
+EBf92AQADAgADeQADMAQ", "file_unique_id":
+"AQADhrIxG_ewpVF-", "file_size": 146653, "width":
+900, "height": 1200}], "caption": "🎁
+Рубашка\n💵Цена: 3000₽
+693₽\n🌟Рейтинг: 4.5\n🔬Состав:
+шерсть10%, Хлопок50%,
+полиэстер38%\n🌈Цвет:
+зеленый, изумрудно-
+зеленый\n🔗Купить: https://www.wild
+berries.ru/catalog/172838346/detail.aspx",
+"caption_entities": [{"type": "bold", "offset": 3,
+"length": 7}, {"type": "strikethrough", "offset":
+19, "length": 4}, {"type": "bold", "offset": 25,
+"length": 3}, {"type": "bold", "offset": 41,
+"length": 3}, {"type": "bold", "offset": 55,
+"length": 34}, {"type": "bold", "offset": 98,
+"length": 26}, {"type": "url", "offset": 135,
+"length": 56}]}>, <Message {"message_id": 8177,
+"from": {"id": 6616429815, "is_bot": true,
+"first_name": "Scrapy", "username": "toseekbot"},
+"chat": {"id": 333253716, "first_name":
+"Narberal", "last_name": "Γάμμα", "username":
+"ShodanAI", "type": "private"}, "date":
+1698346400, "media_group_id": "13586684800888618",
+"photo": [{"file_id": "AgACAgQAAxkDAAIf8WU6i3DmGmk
+FsU1xs7tNSmalVsq2AAItsjEb1XGkUTXHILwbWxtFAQADAgADc
+wADMAQ", "file_unique_id": "AQADLbIxG9VxpFF4",
+"file_size": 987, "width": 67, "height": 90},
+{"file_id": "AgACAgQAAxkDAAIf8WU6i3DmGmkFsU1xs7tNS
+malVsq2AAItsjEb1XGkUTXHILwbWxtFAQADAgADbQADMAQ",
+"file_unique_id": "AQADLbIxG9VxpFFy", "file_size":
+9912, "width": 240, "height": 320}, {"file_id": "A
+gACAgQAAxkDAAIf8WU6i3DmGmkFsU1xs7tNSmalVsq2AAItsjE
+b1XGkUTXHILwbWxtFAQADAgADeAADMAQ",
+"file_unique_id": "AQADLbIxG9VxpFF9", "file_size":
+46614, "width": 600, "height": 800}, {"file_id": "
+AgACAgQAAxkDAAIf8WU6i3DmGmkFsU1xs7tNSmalVsq2AAItsj
+Eb1XGkUTXHILwbWxtFAQADAgADeQADMAQ",
+"file_unique_id": "AQADLbIxG9VxpFF-", "file_size":
+79085, "width": 900, "height": 1200}]}>, <Message
+{"message_id": 8178, "from": {"id": 6616429815,
+"is_bot": true, "first_name": "Scrapy",
+"username": "toseekbot"}, "chat": {"id":
+333253716, "first_name": "Narberal", "last_name":
+"Γάμμα", "username": "ShodanAI", "type":
+"private"}, "date": 1698346400, "media_group_id":
+"13586684800888618", "photo": [{"file_id":
+"AgACAgQAAxkDAAIf8mU6i3C_jON3eYIHGIBrxwPmquZuAAL-
+sTEb1nylUbZjVs_EkRE9AQADAgADcwADMAQ",
+"file_unique_id": "AQAD_rExG9Z8pVF4", "file_size":
+1306, "width": 67, "height": 90}, {"file_id":
+"AgACAgQAAxkDAAIf8mU6i3C_jON3eYIHGIBrxwPmquZuAAL-
+sTEb1nylUbZjVs_EkRE9AQADAgADbQADMAQ",
+"file_unique_id": "AQAD_rExG9Z8pVFy", "file_size":
+16270, "width": 240, "height": 320}, {"file_id":
+"AgACAgQAAxkDAAIf8mU6i3C_jON3eYIHGIBrxwPmquZuAAL-
+sTEb1nylUbZjVs_EkRE9AQADAgADeAADMAQ",
+"file_unique_id": "AQAD_rExG9Z8pVF9", "file_size":
+85353, "width": 600, "height": 800}, {"file_id":
+"AgACAgQAAxkDAAIf8mU6i3C_jON3eYIHGIBrxwPmquZuAAL-
+sTEb1nylUbZjVs_EkRE9AQADAgADeQADMAQ",
+"file_unique_id": "AQAD_rExG9Z8pVF-", "file_size":
+155222, "width": 900, "height": 1200}]}>, <Message
+{"message_id": 8179, "from": {"id": 6616429815,
+"is_bot": true, "first_name": "Scrapy",
+"username": "toseekbot"}, "chat": {"id":
+333253716, "first_name": "Narberal", "last_name":
+"Γάμμα", "username": "ShodanAI", "type":
+"private"}, "date": 1698346400, "media_group_id":
+"13586684800888618", "photo": [{"file_id":
+"AgACAgQAAxkDAAIf82U6i3AWXtqxim0BvSGOvOzI-Uf-
+AALmsTEbiAylUXtPQZPT8qIIAQADAgADcwADMAQ",
+"file_unique_id": "AQAD5rExG4gMpVF4", "file_size":
+1004, "width": 67, "height": 90}, {"file_id":
+"AgACAgQAAxkDAAIf82U6i3AWXtqxim0BvSGOvOzI-Uf-
+AALmsTEbiAylUXtPQZPT8qIIAQADAgADbQADMAQ",
+"file_unique_id": "AQAD5rExG4gMpVFy", "file_size":
+9551, "width": 240, "height": 320}, {"file_id":
+"AgACAgQAAxkDAAIf82U6i3AWXtqxim0BvSGOvOzI-Uf-
+AALmsTEbiAylUXtPQZPT8qIIAQADAgADeAADMAQ",
+"file_unique_id": "AQAD5rExG4gMpVF9", "file_size":
+43842, "width": 600, "height": 800}, {"file_id":
+"AgACAgQAAxkDAAIf82U6i3AWXtqxim0BvSGOvOzI-Uf-
+AALmsTEbiAylUXtPQZPT8qIIAQADAgADeQADMAQ",
+"file_unique_id": "AQAD5rExG4gMpVF-", "file_size":
+73299, "width": 900, "height": 1200}]}>, <Message
+{"message_id": 8180, "from": {"id": 6616429815,
+"is_bot": true, "first_name": "Scrapy",
+"username": "toseekbot"}, "chat": {"id":
+333253716, "first_name": "Narberal", "last_name":
+"Γάμμα", "username": "ShodanAI", "type":
+"private"}, "date": 1698346400, "media_group_id":
+"13586684800888618", "photo": [{"file_id": "AgACAg
+QAAxkDAAIf9GU6i3DZnwnM0d5IcYJJxzPLx-
+K0AAKisTEblJykURDnG3ogIQoOAQADAgADcwADMAQ",
+"file_unique_id": "AQADorExG5ScpFF4", "file_size":
+1345, "width": 67, "height": 90}, {"file_id": "AgA
+CAgQAAxkDAAIf9GU6i3DZnwnM0d5IcYJJxzPLx-
+K0AAKisTEblJykURDnG3ogIQoOAQADAgADbQADMAQ",
+"file_unique_id": "AQADorExG5ScpFFy", "file_size":
+17373, "width": 240, "height": 320}, {"file_id": "
+AgACAgQAAxkDAAIf9GU6i3DZnwnM0d5IcYJJxzPLx-
+K0AAKisTEblJykURDnG3ogIQoOAQADAgADeAADMAQ",
+"file_unique_id": "AQADorExG5ScpFF9", "file_size":
+88594, "width": 600, "height": 800}, {"file_id": "
+AgACAgQAAxkDAAIf9GU6i3DZnwnM0d5IcYJJxzPLx-
+K0AAKisTEblJykURDnG3ogIQoOAQADAgADeQADMAQ",
+"file_unique_id": "AQADorExG5ScpFF-", "file_size":
+157823, "width": 900, "height": 1200}]}>, <Message
+{"message_id": 8181, "from": {"id": 6616429815,
+"is_bot": true, "first_name": "Scrapy",
+"username": "toseekbot"}, "chat": {"id":
+333253716, "first_name": "Narberal", "last_name":
+"Γάμμα", "username": "ShodanAI", "type":
+"private"}, "date": 1698346400, "media_group_id":
+"13586684800888618", "photo": [{"file_id": "AgACAg
+QAAxkDAAIf9WU6i3Ai82t0XgmnviV4TkGQ4xebAAL1sTEbA-
+alUXdJnfPcKzr5AQADAgADcwADMAQ", "file_unique_id":
+"AQAD9bExGwPmpVF4", "file_size": 1263, "width":
+67, "height": 90}, {"file_id": "AgACAgQAAxkDAAIf9W
+U6i3Ai82t0XgmnviV4TkGQ4xebAAL1sTEbA-
+alUXdJnfPcKzr5AQADAgADbQADMAQ", "file_unique_id":
+"AQAD9bExGwPmpVFy", "file_size": 14663, "width":
+240, "height": 320}, {"file_id": "AgACAgQAAxkDAAIf
+9WU6i3Ai82t0XgmnviV4TkGQ4xebAAL1sTEbA-
+alUXdJnfPcKzr5AQADAgADeAADMAQ", "file_unique_id":
+"AQAD9bExGwPmpVF9", "file_size": 75920, "width":
+600, "height": 800}, {"file_id": "AgACAgQAAxkDAAIf
+9WU6i3Ai82t0XgmnviV4TkGQ4xebAAL1sTEbA-
+alUXdJnfPcKzr5AQADAgADeQADMAQ", "file_unique_id":
+"AQAD9bExGwPmpVF-", "file_size": 136540, "width":
+900, "height": 1200}]}>, <Message {"message_id":
+8182, "from": {"id":  6616429815, "is_bot": true,
+"first_name": "Scrapy", "username": "toseekbot"},
+"chat": {"id": 333253716, "first_name":
+"Narberal", "last_name": "Γάμμα", "username":
+"ShodanAI", "type": "private"}, "date":
+1698346400, "media_group_id": "13586684800888618",
+"photo": [{"file_id": "AgACAgQAAxkDAAIf9mU6i3CLKTD
+b1voN7BL90MsZ1WhyAAJNsjEbAYulUVQ6Y73beeRFAQADAgADc
+wADMAQ", "file_unique_id": "AQADTbIxGwGLpVF4",
+"file_size": 1312, "width": 67, "height": 90},
+{"file_id": "AgACAgQAAxkDAAIf9mU6i3CLKTDb1voN7BL90
+MsZ1WhyAAJNsjEbAYulUVQ6Y73beeRFAQADAgADbQADMAQ",
+"file_unique_id": "AQADTbIxGwGLpVFy", "file_size":
+16888, "width": 240, "height": 320}, {"file_id": "
+AgACAgQAAxkDAAIf9mU6i3CLKTDb1voN7BL90MsZ1WhyAAJNsj
+EbAYulUVQ6Y73beeRFAQADAgADeAADMAQ",
+"file_unique_id": "AQADTbIxGwGLpVF9", "file_size":
+87167, "width": 600, "height": 800}, {"file_id": "
+AgACAgQAAxkDAAIf9mU6i3CLKTDb1voN7BL90MsZ1WhyAAJNsj
+EbAYulUVQ6Y73beeRFAQADAgADeQADMAQ",
+"file_unique_id": "AQADTbIxGwGLpVF-",
+"file_size": 157950, "width": 900, "height":
+1200}]}>, <Message {"message_id": 8183, "from":
+{"id": 6616429815, "is_bot": true, "first_name":
+"Scrapy", "username": "toseekbot"}, "chat": {"id":
+333253716, "first_name": "Narberal", "last_name":
+"Γάμμα", "username": "ShodanAI", "type":
+"private"}, "date": 1698346400, "media_group_id":
+"13586684800888618", "photo": [{"file_id": "AgACAg
+QAAxkDAAIf92U6i3BoQVuwbr6T9cCwYgiGxlCsAALZsTEb3Mml
+UQRTsxNc_dUMAQADAgADcwADMAQ", "file_unique_id":
+"AQAD2bExG9zJpVF4", "file_size": 1204, "width":
+67, "height": 90}, {"file_id": "AgACAgQAAxkDAAIf92
+U6i3BoQVuwbr6T9cCwYgiGxlCsAALZsTEb3MmlUQRTsxNc_dUM
+AQADAgADbQADMAQ", "file_unique_id":
+"AQAD2bExG9zJpVFy", "file_size": 15020, "width":
+240,  "height": 320}, {"file_id": "AgACAgQAAxkDAAI
+f92U6i3BoQVuwbr6T9cCwYgiGxlCsAALZsTEb3MmlUQRTsxNc_
+dUMAQADAgADeAADMAQ", "file_unique_id":
+"AQAD2bExG9zJpVF9", "file_size": 85249, "width":
+600, "height": 800}, {"file_id": "AgACAgQAAxkDAAIf
+92U6i3BoQVuwbr6T9cCwYgiGxlCsAALZsTEb3MmlUQRTsxNc_d
+UMAQADAgADeQADMAQ", "file_unique_id":
+"AQAD2bExG9zJpVF-", "file_size": 157968, "width":
+900, "height": 1200}]}>, <Message {"message_id":
+8184, "from": {"id": 6616429815, "is_bot": true,
+"first_name": "Scrapy", "username": "toseekbot"},
+"chat": {"id": 333253716, "first_name":
+"Narberal", "last_name": "Γάμμα", "username":
+"ShodanAI", "type": "private"}, "date":
+1698346400, "media_group_id": "13586684800888618",
+"photo": [{"file_id": "AgACAgQAAxkDAAIf-GU6i3DWvEG
+OdqBmsexA9fNiLEexAALAsTEb3VqlUeMyz1P7B6niAQADAgADc
+wADMAQ", "file_unique_id": "AQADwLExG91apVF4",
+"file_size": 1327, "width": 67, "height": 90},
+{"file_id": "AgACAgQAAxkDAAIf-GU6i3DWvEGOdqBmsexA9
+fNiLEexAALAsTEb3VqlUeMyz1P7B6niAQADAgADbQADMAQ",
+"file_unique_id": "AQADwLExG91apVFy", "file_size":
+17246, "width": 240, "height": 320}, {"file_id":
+"AgACAgQAAxkDAAIf-GU6i3DWvEGOdqBmsexA9fNiLEexAALAs
+TEb3VqlUeMyz1P7B6niAQADAgADeAADMAQ",
+"file_unique_id": "AQADwLExG91apVF9", "file_size":
+87386, "width": 600, "height": 800}, {"file_id":
+"AgACAgQAAxkDAAIf-GU6i3DWvEGOdqBmsexA9fNiLEexAALAs
+TEb3VqlUeMyz1P7B6niAQADAgADeQADMAQ",
+"file_unique_id": "AQADwLExG91apVF-", "file_size":
+155084, "width": 900, "height": 1200}]}>, <Message
+{"message_id": 8185, "from": {"id": 6616429815,
+"is_bot": true, "first_name": "Scrapy",
+"username": "toseekbot"}, "chat": {"id":
+333253716, "first_name": "Narberal", "last_name":
+"Γάμμα", "username": "ShodanAI", "type":
+"private"}, "date": 1698346400, "media_group_id":
+"13586684800888618", "photo": [{"file_id":
+"AgACAgQAAxkDAAIf-WU6i3D0ktw2PHOM19SGTyYm26txAAL4s
+TEb0jmkURTy23kAAffvNQEAAwIAA3MAAzAE",
+"file_unique_id": "AQAD-LExG9I5pFF4", "file_size":
+1296, "width": 67, "height": 90}, {"file_id":
+"AgACAgQAAxkDAAIf-WU6i3D0ktw2PHOM19SGTyYm26txAAL4s
+TEb0jmkURTy23kAAffvNQEAAwIAA20AAzAE",
+"file_unique_id": "AQAD-LExG9I5pFFy", "file_size":
+15424, "width": 240, "height": 320}, {"file_id":
+"AgACAgQAAxkDAAIf-WU6i3D0ktw2PHOM19SGTyYm26txAAL4s
+TEb0jmkURTy23kAAffvNQEAAwIAA3gAAzAE",
+"file_unique_id": "AQAD-LExG9I5pFF9", "file_size":
+77241, "width": 600, "height": 800}, {"file_id":
+"AgACAgQAAxkDAAIf-WU6i3D0ktw2PHOM19SGTyYm26txAAL4s
+TEb0jmkURTy23kAAffvNQEAAwIAA3kAAzAE",
+"file_unique_id": "AQAD-LExG9I5pFF-", "file_size":
+136717, "width": 900, "height": 1200}]}>]

@@ -3,6 +3,7 @@ import sql
 import time
 import logging
 import colorlog
+import re
 
 super_list = []
 index = 0
@@ -17,7 +18,7 @@ def operate_image(video):
     for num in range(1, pic_count):
         new_pic_url = base_pic_url.replace("1.webp", str(num)) + ".webp"
         picture_list.append(new_pic_url)
-    return picture_list
+    return picture_list[:10]
 
 
 def parse_wildberries(list_to_return = []):
@@ -35,6 +36,8 @@ def parse_wildberries(list_to_return = []):
             page.goto(url)
             page.wait_for_selector('h1')
             time.sleep(0.5)
+            
+            wb_id = re.findall(r'\d+', url)
             
             try: 
                 sold_out = page.query_selector('//span[@class="sold-out-product__text"]').is_visible()
@@ -72,6 +75,7 @@ def parse_wildberries(list_to_return = []):
             list_to_return.append(name)
         
             data = {
+                "wb_id": wb_id[0],
                 "name": name,
                 "price": price,
                 "discount_price": discount_price,
