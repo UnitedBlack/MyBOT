@@ -7,18 +7,51 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram import types
 from aiogram.types import InputMediaPhoto
 from configure_bot import TOKEN
-import sql, tg_sql, ast, logging, json, os
+import sql, tg_sql, ast, logging, json, os, asyncio
 from pprint import pprint
 from main import initialize
+import requests
 
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
+headers = {"Content-Type": "application/json"}
 
 
 class SendPosts(StatesGroup):
+    start = State()
     sender = State()
     wait_state = State()
+
+
+def schedule_post(data, message: types.Message):
+    result = requests.post(
+        # url="https://inlinegptbot.unitedblack.repl.co",
+        url="http://127.0.0.1:80",
+        data=json.dumps(data),
+        headers=headers,
+    )
+
+    return result.status_code
+
+
+def request_delayed_posts():
+    data = {"get_delayed_posts": "get_delayed_posts"}
+    result = requests.post(
+        # url="https://inlinegptbot.unitedblack.repl.co",
+        url="http://127.0.0.1:80",
+        data=json.dumps(data),
+        headers=headers,
+    )
+    return result.text
+
+
+def request_change_time():
+    ...
+
+
+def request_delete_delayed():
+    ...
 
 
 def append_data_to_db(wb_id, status):
@@ -29,17 +62,25 @@ def append_data_to_db(wb_id, status):
         tg_sql.add_post(wb_id=wb_id, status=status)
 
 
+def get_second_kb() -> types.ReplyKeyboardMarkup:
+    second_kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    second_kb.add(
+        types.KeyboardButton("Запостить"),
+        types.KeyboardButton("Скип"),
+        types.KeyboardButton("Назад"),
+    )
+    return second_kb
+
+
 def get_main_kb() -> types.ReplyKeyboardMarkup:
     main_kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     main_kb.add(
-        types.KeyboardButton("Запостить"),
-        types.KeyboardButton("Скип"),
+        types.KeyboardButton("Листать посты"),
+        types.KeyboardButton("Получить список отложек"),
+        types.KeyboardButton("Изменить время отложки"),
+        types.KeyboardButton("Удалить пост из отложки"),
     )
     return main_kb
-
-
-def get_second_kb() -> types.ReplyKeyboardMarkup:
-    ...
 
 
 def wbparse():
@@ -96,9 +137,13 @@ def prepare_posts():
         return post, pic_url, url
 
 
+async def poster():
+    ...
+
+
 @dp.message_handler(state=SendPosts.sender)
 async def sender(message: types.Message):
-    global post_url
+    global post_url, pic_url, post_text
     try:
         post_text, pic_url, post_url = prepare_posts()
     except TypeError as e:
@@ -107,6 +152,7 @@ async def sender(message: types.Message):
     except ValueError:
         post_text, pic_url, post_url = prepare_posts()
     await SendPosts.wait_state.set()
+    global pictures
     pictures = [InputMediaPhoto(media=pic, parse_mode="HTML") for pic in pic_url]
     pictures[0].caption = post_text
     await bot.send_media_group(chat_id=message.chat.id, media=pictures)
@@ -118,8 +164,15 @@ async def post_or_skip(message: types.Message):
     user_message: str = message.text.lower()
     await SendPosts.sender.set()
     if user_message == "запостить":
-        append_data_to_db(post_url, "Liked")
-        await sender(message=message)
+        delay_data = {"post_text": post_text, "post_pic": pic_url}
+        status = schedule_post(delay_data, message)
+
+        if status != 200:
+            await message.reply("Произошла ошибка с отложкой поста")
+        else:
+            append_data_to_db(post_url, "Liked")
+            await sender(message=message)
+
     elif user_message == "скип":
         append_data_to_db(post_url, "Disliked")
         await sender(message=message)
@@ -130,7 +183,7 @@ async def clear_tg_db(message: types.Message):
     try:
         tg_sql.close_connection()
         os.remove(tg_sql.db_file)
-        await message.reply("БД с вб очищена")
+        await message.reply("БД с тг очищена")
         tg_sql.create_or_connect_database()
     except FileNotFoundError:
         await message.reply("Не могу найти файл")
@@ -164,19 +217,54 @@ async def call_parser(message: types.Message):
     await bot.send_message(message.chat.id, text="Сделано")
 
 
+@dp.message_handler(commands=["delayed"], state="*")
+async def show_delayed_posts(message: types.Message):
+    ...
+
+
 @dp.message_handler(commands=["exit"], state="*")
 async def leave_bot(message: types.Message):
     await message.reply("Завершаю работу")
     exit()
 
 
+@dp.message_handler(regexp="^Назад$", state="*")
+async def main_menu(message: types.Message):
+    # await SendPosts.start.set()
+    await bot.send_message(
+        message.chat.id, text="Вы в главном меню", reply_markup=get_main_kb()
+    )
+
+
+@dp.message_handler(regexp="^Листать посты$", state="*")
+async def select_posts(message: types.Message):
+    # await SendPosts.sender.set()
+    await message.reply("Высылаю посты", reply_markup=get_second_kb())
+    await sender(message=message)
+
+
+@dp.message_handler(regexp="^Получить список отложек$", state="*")
+async def get_delayed_posts(message: types.Message):
+    delayed_post = json.loads(request_delayed_posts())["delayed_posts"]
+    for delayed in delayed_post:
+        jobname = delayed["jobname"]
+        jobtime = delayed["jobtime"]
+        jobid = delayed["job_id"]
+        msg = f"{jobname}\n{jobtime}\n<code>{jobid}</code>"
+        await bot.send_message(message.chat.id, text=msg, parse_mode='HTML')
+        await asyncio.sleep(1)
+
+# Оставить только кнопку получить список отложек
+# После нажатия на нее и рассылки всех сообщений выводить "изменить время отложки" и "удалить" и "назад"
+# а еще сделать чтобы отложка выводилась одним сообщением
+# {'delayed_posts': [{'job_id': 'af14896b133b4f80bb37817eb938a652', 'jobname': 'Набор ярких длинных носков 5 пар', 'jobtime': '31-10 03:00'}, {'job_id': 'ad1d0cd0991141cc9e6c57836a5c27d3', 'jobname': 'Носки теплые набор махровые Термоноски', 'jobtime': '31-10 04:00'}, {'job_id': '9c10c', 'jobname': 'Набор ярких носков 10 пар', 'jobtime': '31-10 06:00'}, {'job_id': '6902cb11cf464b858cba8d44a77fa414', 'jobname': 'Топ спортивный на бретелях', 'jobtime': '31-10 07:00'}, {'job_id': '34518811df46475b815d4b9441e8956d', 'jobname': 'Пуховик зимний длинный с капюшоном', 'jobtime': '31-10 08:00'}, {'job_id': '8f84cc27275a4530b8694bb9d9a5b1dd', 'jobname': 'Пиджак укороченный теплый  блейзер  базовый', 'jobtime': '31-10 09:00'}, {'job_id': '009a6457596447298396293050cc54ad', 'jobname': 'Джинсы клеш трубы', 'jobtime': '31-10 10:00'}, {'job_id': 'a129d7ac33e04d13be928598404b1863', 'jobname': 'Костюм домашний с брюками и топом', 'jobtime': '31-10 11:00'}, {'job_id': '3d47003029af4b8ea2f1fa1308e2ade4', 'jobname': 'Сумка Дорожная Ручная кладь Для фитнеса Спортивная Шоппер', 'jobtime': '31-10 12:00'}, {'job_id': 'ccc1a7e10fcc429eaca125e8ad9feafb', 'jobname': 'Тапочки домашние меховые', 'jobtime': '31-10 13:00'}]}
+
+
 @dp.message_handler(commands=["start"], state="*")
 async def start_point(message: types.Message):
     wbparse()
-    await bot.send_message(
-        message.chat.id, text="Высылаю посты", reply_markup=get_main_kb()
-    )
-    await sender(message=message)
+    await main_menu(message)
+    # await sender(message=message)
 
 
 if __name__ == "__main__":

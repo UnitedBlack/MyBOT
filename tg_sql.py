@@ -91,6 +91,10 @@ def clear_db():
         os.remove(db_file)
     except FileNotFoundError:
         return
+    
+def close_connection():
+    global connection
+    connection.close()
 
 
 if __name__ == "__main__":

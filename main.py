@@ -25,7 +25,7 @@ async def operate_image(video):
     for num in range(1, pic_count):
         new_pic_url = base_pic_url.replace("1.webp", str(num)) + ".webp"
         picture_list.append(new_pic_url)
-    return picture_list[:10]
+    return picture_list[:5]
 
 
 async def parse_wildberries(list_to_return=[]):
@@ -170,7 +170,7 @@ async def parse_main_page():
 
 async def initialize():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         global page
         page = await context.new_page()
