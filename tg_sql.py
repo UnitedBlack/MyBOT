@@ -1,10 +1,8 @@
 import sqlite3
-import os, sys
-
-db_file = "sql_data/tgwb.sqlite"
+import os
 
 
-def create_or_connect_database():
+def connect_database(db_file):
     global connection
     connection = sqlite3.connect(db_file)
     cursor = connection.cursor()
@@ -16,9 +14,10 @@ def create_or_connect_database():
             status TEXT
             )"""
     )
+    return connection
 
 
-def is_post_in_db(id_to_check):
+def is_post_in_db(id_to_check, connection):
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -30,7 +29,7 @@ def is_post_in_db(id_to_check):
     return row if row else False
 
 
-def get_post_status(id_to_check):
+def get_post_status(id_to_check, connection):
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -39,15 +38,13 @@ def get_post_status(id_to_check):
         (id_to_check,),
     )
     row = cursor.fetchone()
-    # print(id_to_check)
-    # print(row)
     if row:
         return row[0]
     else:
         return False
 
 
-def set_post_status(wb_id, status):
+def set_post_status(wb_id, status, connection):
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -58,7 +55,7 @@ def set_post_status(wb_id, status):
     connection.commit()
 
 
-def add_post(wb_id, status="Idle"):
+def add_post(wb_id, connection, status="Idle"):
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -69,7 +66,7 @@ def add_post(wb_id, status="Idle"):
     connection.commit()
 
 
-def get_all_posts():
+def get_all_posts(connection):
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -83,25 +80,12 @@ def get_all_posts():
     return res
 
 
-def clear_db():
-    # global connection
-    # connection.close()
-    # connection = None
+def clear_db(db_file):
     try:
         os.remove(db_file)
     except FileNotFoundError:
         return
-    
-def close_connection():
-    global connection
+
+
+def close_connection(connection):
     connection.close()
-
-
-if __name__ == "__main__":
-    create_or_connect_database()
-    # set_post_status(wb_id="172838346", status="Liked")
-    # print(get_all_posts())
-    get_all_posts()
-else:
-    # clear_db()
-    create_or_connect_database()

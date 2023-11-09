@@ -29,15 +29,14 @@ async def operate_image(video):
     return picture_list[:5]
 
 
-async def parse_wildberries(urls, connection):
-    global posts_count
-    posts_count = 0
+async def parse_wildberries(urls):
     list_to_return = []
     logger.debug("Parsing wildberries cards")
+
     logger.debug(f"Число вб страниц: {len(urls)}")
     for url in urls:
         try:
-            in_database = sql.is_product_in_database(url, connection)
+            in_database = sql.is_product_in_database(url)
             if in_database:
                 logger.warning(f"{url} Product in DB")
                 continue
@@ -131,15 +130,14 @@ async def parse_wildberries(urls, connection):
                 "size": "",
                 "color": color,
             }
-            sql.insert_product(data, connection)
-            posts_count += 1
+            sql.insert_product(data)
             # super_list.append(data)
         except AttributeError as e:
             logger.critical(f"Error {e} in url \n{url}")
             continue
 
 
-async def parse_main_page(skidka_link, connection):
+async def parse_main_page(skidka_link="https://skidka7.com/discount/cwomen/all"):
     logger.debug("Parsing main page...")
 
     list_of_urls = []
@@ -160,17 +158,16 @@ async def parse_main_page(skidka_link, connection):
             )
             url = await url_element.get_attribute("href")
             list_of_urls.append(url)
-    await parse_wildberries(list_of_urls, connection)
+    await parse_wildberries(list_of_urls)
 
 
-async def main(link, connection):
+async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         global page
         page = await context.new_page()
-        await parse_main_page(link, connection)
-    return posts_count
+        await parse_main_page()
 
 
 logger = logging.getLogger("WB")
@@ -196,7 +193,7 @@ logger.addHandler(handler)
 
 if __name__ == "__main__":
     # asyncio.run(initialize())
-    asyncio.run(main(link="https://skidka7.com/discount/cwomen/all"))
+    asyncio.run(main())
     # asyncio.run(parse_main_page())
     logger.debug("Done")
 # else:

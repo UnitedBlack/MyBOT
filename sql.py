@@ -1,12 +1,9 @@
 import sqlite3
 import os
-import time
-
-db_file = "sql_data/WB.sqlite"
 
 
-def create_or_connect_database():
-    global connection
+def connect_database(db_file):
+    # global connection
     connection = sqlite3.connect(db_file)
     cursor = connection.cursor()
     cursor.execute(
@@ -26,9 +23,10 @@ def create_or_connect_database():
             )
             """
     )
+    return connection
 
 
-def insert_product(product_data):
+def insert_product(product_data, connection):
     try:
         cursor = connection.cursor()
 
@@ -57,7 +55,7 @@ def insert_product(product_data):
         print("Ошибка при добавлении данных:", e)
 
 
-def is_product_in_database(url_to_check):
+def is_product_in_database(url_to_check, connection):
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -69,7 +67,7 @@ def is_product_in_database(url_to_check):
     return row is not None
 
 
-def get_all_products():
+def get_all_products(connection):
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -82,10 +80,7 @@ def get_all_products():
     return result
 
 
-def clear_db():
-    # global connection
-    # connection.close()
-    # connection = None
+def clear_db(db_file):
     try:
         os.remove(db_file)
     except FileNotFoundError:
@@ -93,15 +88,13 @@ def clear_db():
     except PermissionError:
         print("Закройте все процессы с БД!")
         exit()
-        
-def close_connection():
-    global connection
+
+
+def close_connection(connection):
     connection.close()
 
 
-if __name__ == "__main__":
-    create_or_connect_database()
-    # clear_db()
-else:
-    # clear_db()
-    create_or_connect_database()
+# if __name__ == "__main__":
+#     create_or_connect_database()
+# else:
+#     create_or_connect_database()
