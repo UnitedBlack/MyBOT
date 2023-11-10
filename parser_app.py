@@ -187,12 +187,3 @@ class Scrapy:
     def clear_wb(self):
         sql.close_connection(self.connection_wb)
         sql.clear_db(self.wb_db)
-
-
-if __name__ == "__main__":
-    schedulerTP = BackgroundScheduler()
-    schedulerHome = BackgroundScheduler()
-    schedulerBijou = BackgroundScheduler()
-    schedulerTP.start()
-    schedulerHome.start()
-    schedulerBijou.start()
