@@ -10,14 +10,24 @@ import telebot
 from random import randint
 
 
-
 class Scrapy:
-    def __init__(self, skidka_link, connection_wb, connection_tg, scheduler, chat_id):
+    def __init__(
+        self,
+        skidka_link,
+        connection_wb,
+        connection_tg,
+        scheduler,
+        chat_id,
+        wb_db,
+        tg_db,
+    ):
         self.skidka_link = skidka_link
         self.connection_wb = connection_wb
         self.connection_tg = connection_tg
         self.scheduler = scheduler
         self.chat_id = chat_id
+        self.wb_db = wb_db
+        self.tg_db = tg_db
         self.time_h = int(datetime.now().strftime("%H"))
         self.bot = telebot.TeleBot(TOKEN)
 
@@ -88,7 +98,10 @@ class Scrapy:
         self.scheduler.reschedule_job(
             job_id=user_job_id,
             trigger=CronTrigger(
-                day=custom_day, month=custom_month, hour=custom_hour, minute=custom_minute
+                day=custom_day,
+                month=custom_month,
+                hour=custom_hour,
+                minute=custom_minute,
             ),
         )
         logging.debug(f"Rescheduled to time {custom_hour}:{custom_minute}")
@@ -166,6 +179,14 @@ class Scrapy:
             if len(pic_url) >= 80:
                 pic_url = ast.literal_eval(pic_url)
             return post, pic_url, url
+
+    def clear_tg(self):
+        tg_sql.close_connection(self.connection_tg)
+        tg_sql.clear_db(self.tg_db)
+
+    def clear_wb(self):
+        sql.close_connection(self.connection_wb)
+        sql.clear_db(self.wb_db)
 
 
 if __name__ == "__main__":

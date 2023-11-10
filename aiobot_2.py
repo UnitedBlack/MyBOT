@@ -8,7 +8,6 @@ from aiogram import types
 from aiogram.types import InputMediaPhoto
 from configure_bot import (
     TOKEN,
-    GOO_SO_TOKEN,
     admin_id,
     tp_group_id,
     home_group_id,
@@ -30,8 +29,6 @@ from path_to_db import (
 )
 import parser_app
 
-start_text = f"Выберите категорию (канал)"
-regexp_categories = "^Категории|Одежда тпшкам|Для дома|Бижутерия|Косметика$"
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
@@ -132,9 +129,11 @@ async def main_menu(message: types.Message):
     )
 
 
-@dp.message_handler(regexp=regexp_categories, state="*")
+@dp.message_handler(
+    regexp="^Категории|Одежда тпшкам|Для дома|Бижутерия|Косметика$", state="*"
+)
 async def state_router(message: types.Message):
-    global connection_wb, connection_tg, skidka_link, scheduler, scrapy, database_file_wb, database_file_tg
+    global connection_wb, connection_tg, skidka_link, scrapy
     match message.text:
         case "Одежда тпшкам":
             skidka_link = "https://skidka7.com/discount/cwomen/all"
@@ -143,7 +142,8 @@ async def state_router(message: types.Message):
             connection_wb = sql.connect_database(db_file=database_file_wb)
             connection_tg = tg_sql.connect_database(db_file=database_file_tg)
             scheduler = schedulerTP
-            scrapy = scrapy_tp
+            skidka_link = "https://skidka7.com/discount/cwomen/all"
+            chat_id = tp_group_id
         case "Для дома":
             skidka_link = "https://skidka7.com/discount/dom/all"
             database_file_wb = home_wb
@@ -151,7 +151,7 @@ async def state_router(message: types.Message):
             connection_wb = sql.connect_database(db_file=database_file_wb)
             connection_tg = tg_sql.connect_database(db_file=database_file_tg)
             scheduler = schedulerHome
-            scrapy = scrapy_home
+            chat_id = home_group_id
         case "Бижутерия":
             skidka_link = "https://skidka7.com/discount/jew/all"
             database_file_wb = bijou_wb
@@ -159,12 +159,22 @@ async def state_router(message: types.Message):
             connection_wb = sql.connect_database(db_file=database_file_wb)
             connection_tg = tg_sql.connect_database(db_file=database_file_tg)
             scheduler = schedulerBijou
-            scrapy = scrapy_bijou
+            chat_id = (bijou_group_id,)
         case "Категории":
             await start_point(message)
             return
         case _:
             await bot.send_message(admin_id, "Не работает")
+            return
+    scrapy = parser_app.Scrapy(
+        skidka_link=skidka_link,
+        wb_db=database_file_wb,
+        tg_db=database_file_tg,
+        connection_wb=connection_wb,
+        connection_tg=connection_tg,
+        scheduler=scheduler,
+        chat_id=chat_id,
+    )
     scrapy.wbparse()
     await main_menu(message)
 
@@ -209,18 +219,22 @@ async def delete_delayed_post(message: types.Message, state: FSMContext):
 
 @dp.message_handler(commands=["clear"], state="*")
 async def clear_tg(message: types.Message):
-    connection_wb.clear_db(database_file_tg)
+    sql.close_connection(connection_tg)
+    scrapy.clear_tg()
+    await message.reply("Очистил")
 
 
 @dp.message_handler(commands=["clear_wb"], state="*")
 async def clear_wb(message: types.Message):
-    connection_wb.clear_db(database_file_tg)
+    sql.close_connection(connection_wb)
+    scrapy.clear_wb()
+    await message.reply("Очистил")
 
 
 @dp.message_handler(commands=["start"])
 async def start_point(message: types.Message):
     await bot.send_message(
-        chat_id=admin_id, text=start_text, reply_markup=get_start_kb()
+        chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
     )
 
 
@@ -231,26 +245,4 @@ if __name__ == "__main__":
     schedulerTP.start()
     schedulerHome.start()
     schedulerBijou.start()
-
-    scrapy_tp = parser_app.Scrapy(
-        skidka_link="https://skidka7.com/discount/cwomen/all",
-        connection_wb=sql.connect_database(db_file=tp_wb),
-        connection_tg=tg_sql.connect_database(db_file=tp_tgwb),
-        scheduler=schedulerTP,
-        chat_id=tp_group_id,
-    )
-    scrapy_home = parser_app.Scrapy(
-        skidka_link="https://skidka7.com/discount/dom/all",
-        connection_wb=sql.connect_database(db_file=home_wb),
-        connection_tg=tg_sql.connect_database(db_file=home_tgwb),
-        scheduler=schedulerHome,
-        chat_id=home_group_id,
-    )
-    scrapy_bijou = parser_app.Scrapy(
-        skidka_link="https://skidka7.com/discount/jew/all",
-        connection_wb=sql.connect_database(db_file=bijou_wb),
-        connection_tg=tg_sql.connect_database(db_file=bijou_tgwb),
-        scheduler=schedulerBijou,
-        chat_id=bijou_group_id,
-    )
     executor.start_polling(dp, skip_updates=True)
