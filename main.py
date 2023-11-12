@@ -48,6 +48,8 @@ async def parse_wildberries(urls, connection, custom=False):
             except TimeoutPlaywright:
                 logger.warning("Couldn't load page, trying again...")
                 await page.goto(url)
+            except TimeoutPlaywright:
+                continue
 
             await page.wait_for_selector("h1")
             await page.wait_for_selector(
