@@ -36,11 +36,13 @@ from path_to_db import (
     bijou_tgwb,
 )
 from pprint import pprint
-
+import logging
 from preknown_errors import playwright_random_error, scrapy_error, tg_random_error
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class States(StatesGroup):
