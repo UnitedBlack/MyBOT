@@ -1,3 +1,7 @@
+import parser_app
+import sql, tg_sql
+from main import main
+from datetime import datetime
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.utils.markdown import hcode
@@ -6,6 +10,16 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram import types
 from aiogram.types import InputMediaPhoto
+from keyboards import (
+    get_clear_db_kb,
+    get_main_kb,
+    get_parser_kb,
+    get_second_kb,
+    get_start_kb,
+    get_third_kb,
+)
+from apscheduler.schedulers.background import BackgroundScheduler
+from ast import literal_eval
 from configure_bot import (
     TOKEN,
     admin_id,
@@ -13,12 +27,6 @@ from configure_bot import (
     home_group_id,
     bijou_group_id,
 )
-import sql, tg_sql
-from pprint import pprint
-from main import main
-from keyboards import get_start_kb, get_main_kb, get_second_kb, get_third_kb
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
 from path_to_db import (
     tp_wb,
     tp_tgwb,
@@ -27,7 +35,9 @@ from path_to_db import (
     bijou_wb,
     bijou_tgwb,
 )
-import parser_app
+from pprint import pprint
+
+from preknown_errors import playwright_random_error, scrapy_error, tg_random_error
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -41,6 +51,60 @@ class States(StatesGroup):
     sender = State()
     wait_state = State()
     get_channel = State()
+    custom_post = State()
+    clear_database = State()
+    parser = State()
+
+
+def get_scrapy():
+    global scrapy
+    scrapy = parser_app.Scrapy(
+        skidka_link=skidka_link,
+        wb_db=database_file_wb,
+        tg_db=database_file_tg,
+        connection_wb=connection_wb,
+        connection_tg=connection_tg,
+        scheduler=scheduler,
+        chat_id=chat_id,
+    )
+
+
+@dp.errors_handler()
+async def error_handler(update: types.Update, exception: Exception):
+    await States.start.set()
+    if str(exception) == scrapy_error:
+        await bot.send_message(admin_id, text="Забыл выбрать категорию")
+        return
+    elif str(exception) == tg_random_error:
+        await bot.send_message(admin_id, text="Телеграм поносит, нажмите кнопку скип")
+        return
+    elif str(exception) == playwright_random_error:
+        pass
+    elif str(exception) == "NoneType' object has no attribute 'get":
+        pass
+    else:
+        await bot.send_message(admin_id, text=f"Не понятная мне ошибка\n{exception}")
+        return
+    return
+
+
+@dp.message_handler(state=States.custom_post)
+async def create_custom_post(message: types.Message):
+    user_link = [message.text]
+    if message.text == "Назад":
+        return
+    data = await main(
+        connection=connection_wb, link=list(user_link), custom=True
+    )  # обработка если уже в бд
+    post_text = scrapy.format_post(data)
+    pics = literal_eval(data["pic_url"])
+    pictures = [InputMediaPhoto(media=pic, parse_mode="HTML") for pic in pics]
+    pictures[0].caption = post_text
+    await bot.send_media_group(chat_id=admin_id, media=pictures)
+    delay_data = {"post_text": post_text, "post_pic": pics}
+    scrapy.schedule_post(delay_data, ad=True)
+    bot.send_message(admin_id, text="Отправил в отложку")
+    await delayed_menu(message)
 
 
 @dp.message_handler(state=States.sender)
@@ -54,8 +118,9 @@ async def sender(message: types.Message):
         await States.start.set()
         await main_menu(message)
         return
-    except ValueError:
+    except ValueError as e:
         post_text, pic_url, post_url = scrapy.prepare_posts()
+        print(e)
     await States.wait_state.set()
     global pictures
     pictures = [InputMediaPhoto(media=pic, parse_mode="HTML") for pic in pic_url]
@@ -73,7 +138,7 @@ async def post_or_skip(message: types.Message):
     await States.sender.set()
     if user_message == "запостить":
         delay_data = {"post_text": post_text, "post_pic": pic_url}
-        status = scrapy.schedule_post(delay_data)
+        scrapy.schedule_post(delay_data)
         scrapy.append_data_to_db(post_url, "Liked")
         await sender(message=message)
 
@@ -85,12 +150,13 @@ async def post_or_skip(message: types.Message):
 @dp.message_handler(regexp="^Листать посты$", state="*")
 async def select_posts(message: types.Message):
     await States.sender.set()
+    # scrapy.wbparse()
     await message.reply("Высылаю посты", reply_markup=get_second_kb())
     await sender(message=message)
 
 
 @dp.message_handler(regexp="^Отложка$", state="*")
-async def get_delayed_posts(message: types.Message):
+async def delayed_menu(message: types.Message):
     await States.delayed_menu.set()
     delayed_post = scrapy.get_delayed_posts()
 
@@ -109,17 +175,27 @@ async def get_delayed_posts(message: types.Message):
             reply_markup=get_third_kb(),
         )
     elif delayed_post == []:
-        await bot.send_message(admin_id, text="Отложка пустая")
+        await bot.send_message(
+            admin_id, text="Отложка пустая", reply_markup=get_third_kb()
+        )
 
 
 @dp.message_handler(regexp="^Парсер$", state="*")
-async def call_parser(message: types.Message):
+async def ask_for_parser(message: types.Message):
+    message_text = f"Вызываю парсер?\nСейчас в базе данных {scrapy.count_of_products_in_db()} продуктов"
+    await bot.send_message(admin_id, text=message_text, reply_markup=get_parser_kb())
+    await States.parser.set()
+
+
+@dp.message_handler(regexp="^Вызвать парсер$", state=States.parser)
+async def call_parser(message: types.Message, state: FSMContext):
     await bot.send_message(
         admin_id,
         text="Вызываю, подождите пару минут. Рекомендую /clear_wb или /clear чтобы очистить БД",
     )
     posts_num = await main(skidka_link, connection_wb)
     await bot.send_message(admin_id, text=f"Сделано, число постов: {posts_num}")
+    await state.finish()
 
 
 @dp.message_handler(regexp="^Назад$", state="*")
@@ -129,18 +205,23 @@ async def main_menu(message: types.Message):
     )
 
 
+async def create_database_connection():
+    global connection_tg, connection_wb
+    connection_wb = sql.connect_database(db_file=database_file_wb)
+    connection_tg = tg_sql.connect_database(db_file=database_file_tg)
+    return connection_wb, connection_tg
+
+
 @dp.message_handler(
     regexp="^Категории|Одежда тпшкам|Для дома|Бижутерия|Косметика$", state="*"
 )
 async def state_router(message: types.Message):
-    global connection_wb, connection_tg, skidka_link, scrapy
+    global skidka_link, connection_tg, connection_wb, database_file_wb, database_file_tg, scheduler, chat_id
     match message.text:
         case "Одежда тпшкам":
             skidka_link = "https://skidka7.com/discount/cwomen/all"
             database_file_wb = tp_wb
             database_file_tg = tp_tgwb
-            connection_wb = sql.connect_database(db_file=database_file_wb)
-            connection_tg = tg_sql.connect_database(db_file=database_file_tg)
             scheduler = schedulerTP
             skidka_link = "https://skidka7.com/discount/cwomen/all"
             chat_id = tp_group_id
@@ -148,49 +229,46 @@ async def state_router(message: types.Message):
             skidka_link = "https://skidka7.com/discount/dom/all"
             database_file_wb = home_wb
             database_file_tg = home_tgwb
-            connection_wb = sql.connect_database(db_file=database_file_wb)
-            connection_tg = tg_sql.connect_database(db_file=database_file_tg)
             scheduler = schedulerHome
             chat_id = home_group_id
         case "Бижутерия":
             skidka_link = "https://skidka7.com/discount/jew/all"
             database_file_wb = bijou_wb
             database_file_tg = bijou_tgwb
-            connection_wb = sql.connect_database(db_file=database_file_wb)
-            connection_tg = tg_sql.connect_database(db_file=database_file_tg)
             scheduler = schedulerBijou
-            chat_id = (bijou_group_id,)
+            chat_id = bijou_group_id
         case "Категории":
             await start_point(message)
             return
         case _:
             await bot.send_message(admin_id, "Не работает")
             return
-    scrapy = parser_app.Scrapy(
-        skidka_link=skidka_link,
-        wb_db=database_file_wb,
-        tg_db=database_file_tg,
-        connection_wb=connection_wb,
-        connection_tg=connection_tg,
-        scheduler=scheduler,
-        chat_id=chat_id,
-    )
-    scrapy.wbparse()
+    await create_database_connection()
+    get_scrapy()
     await main_menu(message)
 
 
-@dp.message_handler(regexp="^Удалить пост|Изменить время$", state=States.delayed_menu)
+@dp.message_handler(
+    regexp="^Удалить пост|Изменить время|Кастомный пост$", state=States.delayed_menu
+)
 async def ask_delayed_id(message: types.Message):
-    if message.text == "Удалить пост":
-        await States.delayed_delete.set()
-        await bot.send_message(message.chat.id, text="Пришлите ID отложки")
+    match message.text:
+        case "Удалить пост":
+            await States.delayed_delete.set()
+            await bot.send_message(message.chat.id, text="Пришлите ID отложки")
 
-    elif message.text == "Изменить время":
-        await States.delayed_change.set()
-        await bot.send_message(
-            message.chat.id,
-            text="Пришлите ID отложки и время в формате '31(д)-10(м) 10:15'",
-        )
+        case "Изменить время":
+            await States.delayed_change.set()
+            await bot.send_message(
+                message.chat.id,
+                text="Пришлите ID отложки и время в формате '31(д)-10(м) 10:15'",
+            )
+        case "Кастомный пост":
+            await bot.send_message(
+                chat_id=admin_id,
+                text="Пришлите ссылку на товар или несколько ссылок, разделенные запятой",
+            )
+            await States.custom_post.set()
 
 
 @dp.message_handler(state=States.delayed_change)
@@ -206,7 +284,7 @@ async def change_post_delayed_time(message: types.Message):
     }
     scrapy.reschedule_post(data)
     await message.reply("Изменил")
-    await get_delayed_posts(message)
+    await delayed_menu(message)
 
 
 @dp.message_handler(state=States.delayed_delete)
@@ -214,21 +292,33 @@ async def delete_delayed_post(message: types.Message, state: FSMContext):
     delayed_id = message.text
     scrapy.delete_job(delayed_id)
     await state.finish()
-    await get_delayed_posts(message)
+    await delayed_menu(message)
 
 
-@dp.message_handler(commands=["clear"], state="*")
+@dp.message_handler(regexp="^Очистить ТГ БД$", state=States.clear_database)
 async def clear_tg(message: types.Message):
-    sql.close_connection(connection_tg)
+    tg_sql.close_connection(connection_tg)
     scrapy.clear_tg()
     await message.reply("Очистил")
+    await create_database_connection()
+    get_scrapy()
 
 
-@dp.message_handler(commands=["clear_wb"], state="*")
+@dp.message_handler(regexp="^Очистить ВБ БД$", state=States.clear_database)
 async def clear_wb(message: types.Message):
     sql.close_connection(connection_wb)
     scrapy.clear_wb()
     await message.reply("Очистил")
+    await create_database_connection()
+    get_scrapy()
+
+
+@dp.message_handler(regexp="^Очистка БД$", state="*")
+async def clear_db(message: types.Message):
+    await bot.send_message(
+        admin_id, text="Какую бд хотите очистить?", reply_markup=get_clear_db_kb()
+    )
+    await States.clear_database.set()
 
 
 @dp.message_handler(commands=["start"])

@@ -18,6 +18,7 @@ def get_main_kb() -> types.ReplyKeyboardMarkup:
         types.KeyboardButton("Листать посты"),
         types.KeyboardButton("Отложка"),
         types.KeyboardButton("Парсер"),
+        types.KeyboardButton("Очистка БД"),
         types.KeyboardButton("Категории"),
     )
     return main_kb
@@ -38,6 +39,26 @@ def get_third_kb() -> types.ReplyKeyboardMarkup:
     third_kb.add(
         types.KeyboardButton("Изменить время"),
         types.KeyboardButton("Удалить пост"),
+        types.KeyboardButton("Кастомный пост"),
         types.KeyboardButton("Назад"),
     )
     return third_kb
+
+
+def get_clear_db_kb() -> types.ReplyKeyboardMarkup:
+    clear_db_kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    clear_db_kb.add(
+        types.KeyboardButton("Очистить ВБ БД"),
+        types.KeyboardButton("Очистить ТГ БД"),
+        types.KeyboardButton("Назад"),
+    )
+    return clear_db_kb
+
+
+def get_parser_kb() -> types.ReplyKeyboardMarkup:
+    parser_kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    parser_kb.add(
+        types.KeyboardButton("Вызвать парсер"),
+        types.KeyboardButton("Назад"),
+    )
+    return parser_kb

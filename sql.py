@@ -87,7 +87,6 @@ def clear_db(db_file):
         return
     except PermissionError:
         print("Закройте все процессы с БД!")
-        exit()
 
 
 def close_connection(connection):

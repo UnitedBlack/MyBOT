@@ -29,7 +29,7 @@ async def operate_image(video):
     return picture_list[:5]
 
 
-async def parse_wildberries(urls, connection):
+async def parse_wildberries(urls, connection, custom=False):
     global posts_count
     posts_count = 0
     list_to_return = []
@@ -39,6 +39,7 @@ async def parse_wildberries(urls, connection):
         try:
             in_database = sql.is_product_in_database(url, connection)
             if in_database:
+                product_in_db = True
                 logger.warning(f"{url} Product in DB")
                 continue
             logger.info(f"{url} not in DB")
@@ -52,7 +53,6 @@ async def parse_wildberries(urls, connection):
             await page.wait_for_selector(
                 '//div[@class="details__header-wrap hide-mobile"]'
             )
-            # time.sleep(0.6)
             wb_id = re.findall(r"\d+", url)
             try:
                 sold_out_element = await page.query_selector(
@@ -64,7 +64,10 @@ async def parse_wildberries(urls, connection):
 
             if sold_out:
                 continue
-
+            pic_count = await page.locator(
+                '//div[@class="sw-slider-kt-mix__wrap"]//ul[@class="swiper-wrapper"]/li'
+            ).count()
+            if pic_count == 1: continue
             name_element = await page.query_selector("h1")
             name = await name_element.text_content()
 
@@ -118,7 +121,7 @@ async def parse_wildberries(urls, connection):
 
             list_of_pictures = await operate_image(is_exist_video)
             list_to_return.append(name)
-
+            # global data
             data = {
                 "wb_id": wb_id[0],
                 "name": name,
@@ -133,10 +136,11 @@ async def parse_wildberries(urls, connection):
             }
             sql.insert_product(data, connection)
             posts_count += 1
-            # super_list.append(data)
         except AttributeError as e:
             logger.critical(f"Error {e} in url \n{url}")
             continue
+        if custom:
+            return data
 
 
 async def parse_main_page(skidka_link, connection):
@@ -163,13 +167,18 @@ async def parse_main_page(skidka_link, connection):
     await parse_wildberries(list_of_urls, connection)
 
 
-async def main(link, connection):
+async def main(link, connection, custom=False):
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         global page
         page = await context.new_page()
-        await parse_main_page(link, connection)
+        if custom:
+            data = await parse_wildberries(link, connection, custom=True)
+            return data
+        else:
+            await parse_main_page(link, connection)
+    print("Done")
     return posts_count
 
 

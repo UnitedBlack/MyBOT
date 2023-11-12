@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from telebot import types
 import telebot
-from random import randint
+from random import randint, choice
 
 
 class Scrapy:
@@ -50,7 +50,7 @@ class Scrapy:
         media[0].caption = post["post_text"]
         self.bot.send_media_group(chat_id=self.chat_id, media=media)
 
-    def schedule_post(self, data):
+    def schedule_post(self, data, ad=False):
         task_name = (
             data["post_text"]
             .splitlines()[0]
@@ -59,6 +59,9 @@ class Scrapy:
             .replace("</b>", "")
             .strip()
         )
+        if ad:
+            task_name = "*РЕКЛАМА*" + task_name
+
         global time_h
         self.time_h = (self.time_h + 1) % 24
         random_minute = randint(1, 15)
@@ -117,6 +120,7 @@ class Scrapy:
 
     def wbparse(self):
         all_products = sql.get_all_products(self.connection_wb)
+
         tg_posts: list = tg_sql.get_all_posts(self.connection_tg)
         filtered_products = [
             product for product in all_products if product["url"] not in tg_posts
@@ -131,15 +135,16 @@ class Scrapy:
         composition = item.get("composition")
         color = item.get("color")
         url = item.get("url")
-        discount_percent = ((price - discount_price) / price) * 100
+        discount_percent = ((int(price) - int(discount_price)) / int(price)) * 100
         try:
             short_url = f"https://goo.su/{self.get_short_link(url)}"
         except:
             short_url = False
-
-        post = f"🎁 {hbold(name)}" if name else ""
+        title_emoji = choice(["♨️", "💯", "🔎", "📌", "🎈", "💥", "⚡️"])
+        price_emoji = choice(["💸", "💰", "💵"])
+        post = f"{title_emoji}{hbold(name)}" if name else ""
         post += (
-            f"\n\n💵Цена: {hstrikethrough(price)}₽ {hbold(discount_price)}₽ (скидка {hbold(int(discount_percent))}%)"
+            f"\n\n{price_emoji}Цена: {hstrikethrough(price)}₽ {hbold(discount_price)}₽ (скидка {hbold(int(discount_percent))}%)"
             if price and discount_price
             else ""
         )
@@ -187,3 +192,6 @@ class Scrapy:
     def clear_wb(self):
         sql.close_connection(self.connection_wb)
         sql.clear_db(self.wb_db)
+
+    def count_of_products_in_db(self):
+        return len(sql.get_all_products(self.connection_wb))
