@@ -1,14 +1,16 @@
 import sqlite3
 import os
 
+db_file = "sql_data\posts.db"
 
-def connect_database(db_file):
+
+def connect_database(table_name):
     global connection
     connection = sqlite3.connect(db_file)
     cursor = connection.cursor()
     cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS posts (
+        f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
             id INTEGER PRIMARY KEY,
             wb_id INTEGER,
             status TEXT
@@ -17,11 +19,11 @@ def connect_database(db_file):
     return connection
 
 
-def is_post_in_db(id_to_check, connection):
+def is_post_in_db(id_to_check, connection, table_name):
     cursor = connection.cursor()
     cursor.execute(
-        """
-    SELECT wb_id FROM posts WHERE wb_id = ?
+        f"""
+    SELECT wb_id FROM {table_name} WHERE wb_id = ?
     """,
         (id_to_check,),
     )
@@ -29,11 +31,11 @@ def is_post_in_db(id_to_check, connection):
     return row if row else False
 
 
-def get_post_status(id_to_check, connection):
+def get_post_status(id_to_check, connection, table_name):
     cursor = connection.cursor()
     cursor.execute(
-        """
-    SELECT status FROM posts WHERE wb_id = ?
+        f"""
+    SELECT status FROM {table_name} WHERE wb_id = ?
     """,
         (id_to_check,),
     )
@@ -44,33 +46,33 @@ def get_post_status(id_to_check, connection):
         return False
 
 
-def set_post_status(wb_id, status, connection):
+def set_post_status(wb_id, status, connection, table_name):
     cursor = connection.cursor()
     cursor.execute(
-        """
-    UPDATE posts SET status = ? WHERE wb_id = ?
+        f"""
+    UPDATE {table_name} SET status = ? WHERE wb_id = ?
     """,
         (status, wb_id),
     )
     connection.commit()
 
 
-def add_post(wb_id, connection, status="Idle"):
+def add_post(wb_id, connection, table_name, status="Idle"):
     cursor = connection.cursor()
     cursor.execute(
-        """
-    INSERT INTO posts (wb_id, status) VALUES (?, ?)
+        f"""
+    INSERT INTO {table_name} (wb_id, status) VALUES (?, ?)
                    """,
         (wb_id, status),
     )
     connection.commit()
 
 
-def get_all_posts(connection):
+def get_all_posts(connection, table_name):
     cursor = connection.cursor()
     cursor.execute(
-        """
-    SELECT wb_id FROM posts
+        f"""
+    SELECT wb_id FROM {table_name}
     """
     )
     rows = cursor.fetchall()
@@ -89,3 +91,8 @@ def clear_db(db_file):
 
 def close_connection(connection):
     connection.close()
+
+
+if __name__ == "__main__":
+    con = connect_database(db_file=r"sql_data\tp_tgwb.sqlite")
+    print(get_all_posts(con))

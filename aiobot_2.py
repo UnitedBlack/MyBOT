@@ -1,5 +1,5 @@
 import parser_app
-import sql, tg_sql
+from sql_data import sql, tg_sql
 from main import main
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
@@ -27,17 +27,14 @@ from configure_bot import (
     home_group_id,
     bijou_group_id,
 )
-from path_to_db import (
-    tp_wb,
-    tp_tgwb,
-    home_wb,
-    home_tgwb,
-    bijou_wb,
-    bijou_tgwb,
-)
 from pprint import pprint
 import logging
-from preknown_errors import playwright_random_error, scrapy_error, tg_random_error
+from preknown_errors import (
+    playwright_random_error,
+    scrapy_error,
+    tg_random_error,
+    aiogram_wrong_string_length,
+)
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -62,12 +59,12 @@ def get_scrapy():
     global scrapy
     scrapy = parser_app.Scrapy(
         skidka_link=skidka_link,
-        wb_db=database_file_wb,
-        tg_db=database_file_tg,
         connection_wb=connection_wb,
         connection_tg=connection_tg,
         scheduler=scheduler,
         chat_id=chat_id,
+        wb_table_name=wb_table_name,
+        tg_table_name=tg_table_name,
     )
 
 
@@ -79,6 +76,11 @@ async def error_handler(update: types.Update, exception: Exception):
         return
     elif str(exception) == tg_random_error:
         await bot.send_message(admin_id, text="Телеграм поносит, нажмите кнопку скип")
+        await States.wait_state.set()
+        return
+    elif str(exception) == aiogram_wrong_string_length:
+        await bot.send_message(admin_id, text="Аиограм поносит, нажмите кнопку скип")
+        await States.wait_state.set()
         return
     elif str(exception) == playwright_random_error:
         pass
@@ -96,7 +98,10 @@ async def create_custom_post(message: types.Message):
     if message.text == "Назад":
         return
     data = await main(
-        connection=connection_wb, link=list(user_link), custom=True
+        connection=connection_wb,
+        link=list(user_link),
+        custom=True,
+        table_name=wb_table_name,
     )  # обработка если уже в бд
     post_text = scrapy.format_post(data)
     pics = literal_eval(data["pic_url"])
@@ -195,22 +200,30 @@ async def call_parser(message: types.Message, state: FSMContext):
         admin_id,
         text="Вызываю, подождите пару минут. Рекомендую /clear_wb или /clear чтобы очистить БД",
     )
-    posts_num = await main(skidka_link, connection_wb)
+    posts_num = await main(skidka_link, connection_wb, table_name=wb_table_name)
     await bot.send_message(admin_id, text=f"Сделано, число постов: {posts_num}")
     await state.finish()
 
 
 @dp.message_handler(regexp="^Назад$", state="*")
 async def main_menu(message: types.Message):
-    await bot.send_message(
-        admin_id, text="Вы в главном меню", reply_markup=get_main_kb()
-    )
+    try:
+        bd_count_text = f"В бд ВБ {scrapy.count_of_products_in_db()} продуктов"
+        tgbd_count_text = f"В бд ТГ {scrapy.count_of_products_in_tgdb()} постов"
+        delay_count_text = f"Постов в отложке {len(scrapy.get_delayed_posts())}"
+        await bot.send_message(
+            admin_id,
+            text=f"*Главное меню*\n{bd_count_text}\n{tgbd_count_text}\n{delay_count_text}\n{scrapy.get_weather()}",
+            reply_markup=get_main_kb(),
+        )
+    except NameError:
+        await start_point()
 
 
 async def create_database_connection():
     global connection_tg, connection_wb
-    connection_wb = sql.connect_database(db_file=database_file_wb)
-    connection_tg = tg_sql.connect_database(db_file=database_file_tg)
+    connection_wb = sql.connect_database(table_name=wb_table_name)
+    connection_tg = tg_sql.connect_database(table_name=tg_table_name)
     return connection_wb, connection_tg
 
 
@@ -218,29 +231,29 @@ async def create_database_connection():
     regexp="^Категории|Одежда тпшкам|Для дома|Бижутерия|Косметика$", state="*"
 )
 async def state_router(message: types.Message):
-    global skidka_link, connection_tg, connection_wb, database_file_wb, database_file_tg, scheduler, chat_id
+    global skidka_link, connection_tg, connection_wb, scheduler, chat_id, wb_table_name, tg_table_name
     match message.text:
         case "Одежда тпшкам":
             skidka_link = "https://skidka7.com/discount/cwomen/all"
-            database_file_wb = tp_wb
-            database_file_tg = tp_tgwb
+            wb_table_name = "tp_wb"
+            tg_table_name = "tp_tg"
             scheduler = schedulerTP
             skidka_link = "https://skidka7.com/discount/cwomen/all"
             chat_id = tp_group_id
         case "Для дома":
             skidka_link = "https://skidka7.com/discount/dom/all"
-            database_file_wb = home_wb
-            database_file_tg = home_tgwb
+            wb_table_name = "home_wb"
+            tg_table_name = "home_tg"
             scheduler = schedulerHome
             chat_id = home_group_id
         case "Бижутерия":
             skidka_link = "https://skidka7.com/discount/jew/all"
-            database_file_wb = bijou_wb
-            database_file_tg = bijou_tgwb
+            wb_table_name = "bijou_wb"
+            tg_table_name = "bijou_tg"
             scheduler = schedulerBijou
             chat_id = bijou_group_id
         case "Категории":
-            await start_point(message)
+            await start_point()
             return
         case _:
             await bot.send_message(admin_id, "Не работает")
@@ -324,7 +337,7 @@ async def clear_db(message: types.Message):
 
 
 @dp.message_handler(commands=["start"])
-async def start_point(message: types.Message):
+async def start_point():
     await bot.send_message(
         chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
     )

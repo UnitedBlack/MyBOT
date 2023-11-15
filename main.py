@@ -1,6 +1,6 @@
 from playwright.async_api import async_playwright
 from playwright._impl._api_types import TimeoutError as TimeoutPlaywright
-import sql
+from sql_data import sql
 import time
 import logging
 import colorlog
@@ -29,7 +29,7 @@ async def operate_image(video):
     return picture_list[:5]
 
 
-async def parse_wildberries(urls, connection, custom=False):
+async def parse_wildberries(urls, connection, table_name, custom=False):
     global posts_count
     posts_count = 0
     list_to_return = []
@@ -37,7 +37,9 @@ async def parse_wildberries(urls, connection, custom=False):
     logger.debug(f"Число вб страниц: {len(urls)}")
     for url in urls:
         try:
-            in_database = sql.is_product_in_database(url, connection)
+            in_database = sql.is_product_in_database(
+                url, connection, table_name=table_name
+            )
             if in_database:
                 product_in_db = True
                 logger.warning(f"{url} Product in DB")
@@ -48,7 +50,7 @@ async def parse_wildberries(urls, connection, custom=False):
             except TimeoutPlaywright:
                 logger.warning("Couldn't load page, skip...")
                 continue
-                
+
             await page.wait_for_selector("h1")
             await page.wait_for_selector(
                 '//div[@class="details__header-wrap hide-mobile"]'
@@ -67,7 +69,8 @@ async def parse_wildberries(urls, connection, custom=False):
             pic_count = await page.locator(
                 '//div[@class="sw-slider-kt-mix__wrap"]//ul[@class="swiper-wrapper"]/li'
             ).count()
-            if pic_count == 1: continue
+            if pic_count == 1:
+                continue
             name_element = await page.query_selector("h1")
             name = await name_element.text_content()
 
@@ -134,7 +137,7 @@ async def parse_wildberries(urls, connection, custom=False):
                 "size": "",
                 "color": color,
             }
-            sql.insert_product(data, connection)
+            sql.insert_product(data, connection, table_name=table_name)
             posts_count += 1
         except AttributeError as e:
             logger.critical(f"Error {e} in url \n{url}")
@@ -143,7 +146,7 @@ async def parse_wildberries(urls, connection, custom=False):
             return data
 
 
-async def parse_main_page(skidka_link, connection):
+async def parse_main_page(skidka_link, connection, table_name):
     logger.debug("Parsing main page...")
 
     list_of_urls = []
@@ -164,49 +167,51 @@ async def parse_main_page(skidka_link, connection):
             )
             url = await url_element.get_attribute("href")
             list_of_urls.append(url)
-    await parse_wildberries(list_of_urls, connection)
+    await parse_wildberries(list_of_urls, connection, table_name)
 
 
-async def main(link, connection, custom=False):
+async def main(link, connection, table_name, custom=False):
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         global page
         page = await context.new_page()
         if custom:
-            data = await parse_wildberries(link, connection, custom=True)
+            data = await parse_wildberries(link, connection, table_name, custom=True)
             return data
         else:
-            await parse_main_page(link, connection)
+            await parse_main_page(link, connection, table_name)
     print("Done")
     return posts_count
 
 
 logger = logging.getLogger("WB")
 logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
-formatter = colorlog.ColoredFormatter(
-    "%(log_color)s%(message)s",
-    datefmt=None,
-    reset=True,
-    log_colors={
-        "DEBUG": "green",
-        "INFO": "purple",
-        "WARNING": "yellow",
-        "ERROR": "red",
-        "CRITICAL": "red",
-    },
-    secondary_log_colors={},
-    style="%",
-)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+# handler = logging.StreamHandler()
+# handler.setLevel(logging.DEBUG)
+# formatter = colorlog.ColoredFormatter(
+#     "%(log_color)s%(message)s",
+#     datefmt=None,
+#     reset=True,
+#     log_colors={
+#         "DEBUG": "green",
+#         "INFO": "purple",
+#         "WARNING": "yellow",
+#         "ERROR": "red",
+#         "CRITICAL": "red",
+#     },
+#     secondary_log_colors={},
+#     style="%",
+# )
+# handler.setFormatter(formatter)
+# logger.addHandler(handler)
+
 
 if __name__ == "__main__":
     # asyncio.run(initialize())
     asyncio.run(main(link="https://skidka7.com/discount/cwomen/all"))
     # asyncio.run(parse_main_page())
+
     logger.debug("Done")
 # else:
 #     asyncio.run(main())

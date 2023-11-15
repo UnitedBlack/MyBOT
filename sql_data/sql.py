@@ -1,14 +1,15 @@
 import sqlite3
 import os
 
+db_file = "sql_data\products.db"
 
-def connect_database(db_file):
-    # global connection
+
+def connect_database(table_name):
     connection = sqlite3.connect(db_file)
     cursor = connection.cursor()
     cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS products (
+        f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
             id INTEGER PRIMARY KEY,
             wb_id INTEGER,
             name TEXT,
@@ -21,18 +22,18 @@ def connect_database(db_file):
             size TEXT,
             color TEXT
             )
-            """
+            """,
     )
     return connection
 
 
-def insert_product(product_data, connection):
+def insert_product(product_data, connection, table_name):
     try:
         cursor = connection.cursor()
 
         cursor.execute(
-            """
-            INSERT INTO products (wb_id, name, discount_price, price, star_rating, url, pic_url, composition, size, color)
+            f"""
+            INSERT INTO {table_name} (wb_id, name, discount_price, price, star_rating, url, pic_url, composition, size, color)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
@@ -55,11 +56,11 @@ def insert_product(product_data, connection):
         print("Ошибка при добавлении данных:", e)
 
 
-def is_product_in_database(url_to_check, connection):
+def is_product_in_database(url_to_check, connection, table_name):
     cursor = connection.cursor()
     cursor.execute(
-        """
-    SELECT url FROM products WHERE url = ?
+        f"""
+    SELECT url FROM {table_name} WHERE url = ?
     """,
         (url_to_check,),
     )
@@ -67,11 +68,11 @@ def is_product_in_database(url_to_check, connection):
     return row is not None
 
 
-def get_all_products(connection):
+def get_all_products(connection, table_name):
     cursor = connection.cursor()
     cursor.execute(
-        """
-    SELECT * FROM products
+        f"""
+    SELECT * FROM {table_name}
     """
     )
     rows = cursor.fetchall()
@@ -93,7 +94,5 @@ def close_connection(connection):
     connection.close()
 
 
-# if __name__ == "__main__":
-#     create_or_connect_database()
-# else:
-#     create_or_connect_database()
+if __name__ == "__main__":
+    connect_database(table_name="tp_tg")
