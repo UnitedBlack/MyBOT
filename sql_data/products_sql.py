@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-db_file = "sql_data\products.db"
+db_file = "sql_data\sources\products.db"
 
 
 def connect_database(table_name):
@@ -27,8 +27,9 @@ def connect_database(table_name):
     return connection
 
 
-def insert_product(product_data, connection, table_name):
+def insert_product(product_data, table_name):
     try:
+        connection = connect_database(table_name)
         cursor = connection.cursor()
 
         cursor.execute(
@@ -56,8 +57,8 @@ def insert_product(product_data, connection, table_name):
         print("Ошибка при добавлении данных:", e)
 
 
-def is_product_in_database(url_to_check, connection, table_name):
-    cursor = connection.cursor()
+def is_product_in_database(url_to_check, table_name):
+    cursor = connect_database(table_name).cursor()
     cursor.execute(
         f"""
     SELECT url FROM {table_name} WHERE url = ?
@@ -68,8 +69,8 @@ def is_product_in_database(url_to_check, connection, table_name):
     return row is not None
 
 
-def get_all_products(connection, table_name):
-    cursor = connection.cursor()
+def get_all_products(table_name):
+    cursor = connect_database(table_name).cursor()
     cursor.execute(
         f"""
     SELECT * FROM {table_name}
@@ -81,16 +82,15 @@ def get_all_products(connection, table_name):
     return result
 
 
-def clear_db(db_file):
-    try:
-        os.remove(db_file)
-    except FileNotFoundError:
-        return
-    except PermissionError:
-        print("Закройте все процессы с БД!")
+def delete_all_records(table_name):
+    connection = connect_database(table_name)
+    cursor = connection.cursor()
+    cursor.execute(f"DELETE FROM {table_name}")
+    connection.commit()
 
 
-def close_connection(connection):
+def close_connection(table_name):
+    connection = connect_database(table_name)
     connection.close()
 
 

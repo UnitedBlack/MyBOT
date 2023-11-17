@@ -1,6 +1,6 @@
 from playwright.async_api import async_playwright
 from playwright._impl._api_types import TimeoutError as TimeoutPlaywright
-from sql_data import sql
+from sql_data import products_sql
 import time
 import logging
 import colorlog
@@ -29,7 +29,7 @@ async def operate_image(video):
     return picture_list[:5]
 
 
-async def parse_wildberries(urls, connection, table_name, custom=False):
+async def parse_wildberries(urls, table_name, custom=False):
     global posts_count
     posts_count = 0
     list_to_return = []
@@ -37,9 +37,7 @@ async def parse_wildberries(urls, connection, table_name, custom=False):
     logger.debug(f"Число вб страниц: {len(urls)}")
     for url in urls:
         try:
-            in_database = sql.is_product_in_database(
-                url, connection, table_name=table_name
-            )
+            in_database = products_sql.is_product_in_database(url, table_name=table_name)
             if in_database:
                 product_in_db = True
                 logger.warning(f"{url} Product in DB")
@@ -137,7 +135,7 @@ async def parse_wildberries(urls, connection, table_name, custom=False):
                 "size": "",
                 "color": color,
             }
-            sql.insert_product(data, connection, table_name=table_name)
+            products_sql.insert_product(data, table_name=table_name)
             posts_count += 1
         except AttributeError as e:
             logger.critical(f"Error {e} in url \n{url}")
@@ -146,7 +144,7 @@ async def parse_wildberries(urls, connection, table_name, custom=False):
             return data
 
 
-async def parse_main_page(skidka_link, connection, table_name):
+async def parse_main_page(skidka_link, table_name):
     logger.debug("Parsing main page...")
 
     list_of_urls = []
@@ -167,51 +165,46 @@ async def parse_main_page(skidka_link, connection, table_name):
             )
             url = await url_element.get_attribute("href")
             list_of_urls.append(url)
-    await parse_wildberries(list_of_urls, connection, table_name)
+    await parse_wildberries(list_of_urls, table_name)
 
 
-async def main(link, connection, table_name, custom=False):
+async def main(link, table_name, custom=False):
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         global page
         page = await context.new_page()
         if custom:
-            data = await parse_wildberries(link, connection, table_name, custom=True)
+            data = await parse_wildberries(link, table_name, custom=True)
             return data
         else:
-            await parse_main_page(link, connection, table_name)
+            await parse_main_page(link, table_name)
     print("Done")
     return posts_count
 
 
 logger = logging.getLogger("WB")
 logger.setLevel(logging.DEBUG)
-# handler = logging.StreamHandler()
-# handler.setLevel(logging.DEBUG)
-# formatter = colorlog.ColoredFormatter(
-#     "%(log_color)s%(message)s",
-#     datefmt=None,
-#     reset=True,
-#     log_colors={
-#         "DEBUG": "green",
-#         "INFO": "purple",
-#         "WARNING": "yellow",
-#         "ERROR": "red",
-#         "CRITICAL": "red",
-#     },
-#     secondary_log_colors={},
-#     style="%",
-# )
-# handler.setFormatter(formatter)
-# logger.addHandler(handler)
 
 
 if __name__ == "__main__":
-    # asyncio.run(initialize())
     asyncio.run(main(link="https://skidka7.com/discount/cwomen/all"))
-    # asyncio.run(parse_main_page())
-
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    formatter = colorlog.ColoredFormatter(
+        "%(log_color)s%(message)s",
+        datefmt=None,
+        reset=True,
+        log_colors={
+            "DEBUG": "green",
+            "INFO": "purple",
+            "WARNING": "yellow",
+            "ERROR": "red",
+            "CRITICAL": "red",
+        },
+        secondary_log_colors={},
+        style="%",
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     logger.debug("Done")
-# else:
-#     asyncio.run(main())
