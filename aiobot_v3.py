@@ -232,7 +232,7 @@ async def main_menu(message: types.Message):
             reply_markup=get_main_kb(),
         )
     except NameError:
-        await start_point()
+        await start_point(message)
 
 
 @dp.message_handler(
