@@ -374,7 +374,7 @@ async def clear_db(message: types.Message):
 
 
 @dp.message_handler(commands=["start"])
-async def start_point():
+async def start_point(message: types.Message):
     await bot.send_message(
         chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
     )
