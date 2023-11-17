@@ -379,7 +379,7 @@ async def start_point(message: types.Message):
         chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
     )
 
-# ALL CALLBACKS
+# CALLBACKS
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith("prev-month"),
     state="*",
