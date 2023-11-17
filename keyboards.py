@@ -143,12 +143,19 @@ def create_time_kb() -> types.InlineKeyboardMarkup:
     time_kb = types.InlineKeyboardMarkup()
     row = []
     for hour in range(10, 23):
-        row.append(types.InlineKeyboardButton(f"{hour}:00", callback_data=f"time-{hour}-00"))
-        if hour != 22:  # Don't add 22:30 button
-            row.append(types.InlineKeyboardButton(f"{hour}:30", callback_data=f"time-{hour}-30"))
-        if len(row) >= 6:  # Add 6 buttons per row
+        row.append(
+            types.InlineKeyboardButton(f"{hour}:00", callback_data=f"time-{hour}-00")
+        )
+        if hour != 22:
+            row.append(
+                types.InlineKeyboardButton(
+                    f"{hour}:30", callback_data=f"time-{hour}-30"
+                )
+            )
+        if len(row) >= 6:
             time_kb.row(*row)
             row = []
-    if row:  # Add remaining buttons
+    if row:
         time_kb.row(*row)
+    time_kb.row(types.InlineKeyboardButton("Назад", callback_data="back-time"))
     return time_kb

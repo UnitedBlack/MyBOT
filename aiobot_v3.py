@@ -1,7 +1,6 @@
 import parser_app
 import scheduler_app
 import logging
-from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
 from sql_data import posts_sql, products_sql
 from main import main
 from datetime import datetime
@@ -42,6 +41,7 @@ from preknown_errors import (
     scrapy_error,
     tg_random_error,
     aiogram_wrong_string_length,
+    failed_to_send_message,
 )
 
 bot = Bot(token=TOKEN)
@@ -59,6 +59,7 @@ class States(StatesGroup):
     sender = State()
     wait_state = State()
     custom_post = State()
+    custom_post_link = State()
     clear_database = State()
     parser = State()
     clear_delayed = State()
@@ -79,7 +80,7 @@ async def error_handler(update: types.Update, exception: Exception):
     if str(exception) == scrapy_error:
         await bot.send_message(admin_id, text="Забыл выбрать категорию")
         return
-    elif str(exception) == tg_random_error:
+    elif str(exception) == tg_random_error or str(exception) == failed_to_send_message:
         await bot.send_message(admin_id, text="Телеграм поносит, нажмите кнопку скип")
         await States.wait_state.set()
         return
@@ -88,16 +89,15 @@ async def error_handler(update: types.Update, exception: Exception):
         await States.wait_state.set()
         return
     elif str(exception) == playwright_random_error:
-        pass
+        return
     elif str(exception) == "NoneType' object has no attribute 'get":
-        pass
+        return
     else:
         await bot.send_message(admin_id, text=f"Не понятная мне ошибка\n{exception}")
         return
-    return
 
 
-@dp.message_handler(state=States.custom_post)
+@dp.message_handler(state=States.custom_post_link)
 async def create_custom_post(message: types.Message):
     user_link = [message.text]
     if message.text == "Назад":
@@ -106,15 +106,25 @@ async def create_custom_post(message: types.Message):
         link=list(user_link),
         custom=True,
         table_name=wb_table_name,
-    )  # обработка если уже в бд
+    )  # обработка если уже в бд, могут быть одни и те же реклы, поэтому надо как-то игнорить
     post_text = scrapy.format_post(data)
     pics = literal_eval(data["pic_url"])
     pictures = [InputMediaPhoto(media=pic, parse_mode="HTML") for pic in pics]
     pictures[0].caption = post_text
     await bot.send_media_group(chat_id=admin_id, media=pictures)
+    custom_time = (
+        calendar_hour,
+        calendar_minute,
+        calendar_day,
+        calendar_month,
+        calendar_year,
+    )
     delay_data = {"post_text": post_text, "post_pic": pics}
-    scheduler_app.schedule_post(delay_data, scheduler, ad=True)
-    bot.send_message(admin_id, text="Отправил в отложку")
+    scheduler_app.schedule_post(delay_data, scheduler, ad=True, custom_time=custom_time)
+    await bot.send_message(
+        admin_id,
+        text=f"Добавил в отложку, время {calendar_hour}:{calendar_minute} {calendar_day}-{calendar_month}",
+    )
     await delayed_menu(message)
 
 
@@ -270,7 +280,6 @@ async def ask_delayed_id(message: types.Message):
         case "Удалить пост":
             await States.delayed_delete.set()
             await bot.send_message(message.chat.id, text="Пришлите ID отложки")
-
         case "Изменить время":
             await States.delayed_change.set()
             await bot.send_message(
@@ -278,11 +287,16 @@ async def ask_delayed_id(message: types.Message):
                 text="Пришлите ID отложки'",
             )
         case "Кастомный пост":
-            await bot.send_message(
-                chat_id=admin_id,
-                text="Пришлите ссылку на товар или несколько ссылок, разделенные запятой",
-            )
             await States.custom_post.set()
+            year, month = datetime.now().year, datetime.now().month
+            await bot.send_message(
+                admin_id,
+                f"📅Выберите день и время: ",
+                reply_markup=create_calendar(
+                    year,
+                    month,
+                ),
+            )
         case "Очистить всю отложку":
             await bot.send_message(
                 chat_id=admin_id,
@@ -304,24 +318,25 @@ async def get_delayed_id(message: types.Message):
     global delayed_id
     await States.delayed_change_date.set()
     delayed_id = message.text
+    year, month = datetime.now().year, datetime.now().month
     await bot.send_message(
-        admin_id, text=f"📅Выберите день: ", reply_markup=create_calendar
+        admin_id,
+        f"📅Выберите день и время: ",
+        reply_markup=create_calendar(
+            year,
+            month,
+        ),
     )
 
 
 @dp.message_handler(state=States.delayed_change_date)
-async def change_post_delayed_time(
-    message: types.Message, callback_query: types.CallbackQuery
-):
-    _, day, month, year = callback_query.data.split("-")
-    # delayed_id, user_date = message.text.splitlines()
-    # formatted_date = datetime.strptime(str(user_date), "%d-%m %H:%M")
+async def change_post_delayed_time(message: types.Message):
     data = {
         "job_id": delayed_id,
-        "custom_month": month,
-        "custom_day": day,
-        # "custom_hour": formatted_date.hour,
-        # "custom_minute": formatted_date.minute,
+        "custom_month": calendar_month,
+        "custom_day": calendar_day,
+        "custom_hour": calendar_hour,
+        "custom_minute": calendar_minute,
     }
     scheduler_app.reschedule_post(data, scheduler)
     await message.reply("Изменил")
@@ -359,22 +374,17 @@ async def clear_db(message: types.Message):
 
 
 @dp.message_handler(commands=["start"])
-async def start_point(message: types.Message):
-    # await bot.send_message(
-    #     chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
-    # )
-    year, month = datetime.now().year, datetime.now().month
+async def start_point():
     await bot.send_message(
-        message.chat.id,
-        f"📅Выберите день и время: ",
-        reply_markup=create_calendar(
-            year,
-            month,
-        ),
+        chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
     )
 
 
-@dp.callback_query_handler(lambda c: c.data and c.data.startswith("prev-month"))
+# CALLBACKS
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith("prev-month"),
+    state="*",
+)
 async def process_callback_prev_month(callback_query: types.CallbackQuery):
     _, month, _, year = callback_query.data.split("-")[1:]
     month, year = int(month), int(year)
@@ -392,7 +402,10 @@ async def process_callback_prev_month(callback_query: types.CallbackQuery):
     await callback_query.answer()
 
 
-@dp.callback_query_handler(lambda c: c.data and c.data.startswith("next-month"))
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith("next-month"),
+    state="*",
+)
 async def process_callback_next_month(callback_query: types.CallbackQuery):
     _, month, _, year = callback_query.data.split("-")[1:]
     month, year = int(month), int(year)
@@ -410,7 +423,9 @@ async def process_callback_next_month(callback_query: types.CallbackQuery):
     await callback_query.answer()
 
 
-@dp.callback_query_handler(lambda c: c.data and c.data.startswith("calendar"))
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith("calendar"), state="*"
+)
 async def process_callback_calendar(callback_query: types.CallbackQuery):
     global calendar_day, calendar_month, calendar_year
     _, calendar_day, calendar_month, calendar_year = callback_query.data.split("-")
@@ -418,6 +433,49 @@ async def process_callback_calendar(callback_query: types.CallbackQuery):
         callback_query.from_user.id,
         callback_query.message.message_id,
         reply_markup=create_time_kb(),
+    )
+
+
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith("time"), state=States.delayed_change_date
+)
+async def process_callback_calendar_time(callback_query: types.CallbackQuery):
+    global calendar_hour, calendar_minute
+    _, calendar_hour, calendar_minute = callback_query.data.split("-")
+    await change_post_delayed_time(message=callback_query.message)
+
+
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith("time"), state=States.custom_post
+)
+async def process_callback_calendar_time(callback_query: types.CallbackQuery):
+    global calendar_hour, calendar_minute
+    _, calendar_hour, calendar_minute = callback_query.data.split("-")
+    await States.custom_post_link.set()
+    await bot.delete_message(
+        callback_query.from_user.id,
+        callback_query.message.message_id,
+    )
+    await bot.send_message(
+        admin_id,
+        text=f"Выбранное время: {calendar_hour}:{calendar_minute} {calendar_day}-{calendar_month}\nПришлите ссылку на товар",
+    )
+
+
+@dp.callback_query_handler(
+    lambda c: c.data and c.data.startswith("back-time"),
+    state="*",
+)
+async def send_calendar_keyboard(callback_query: types.CallbackQuery):
+    year, month = datetime.now().year, datetime.now().month
+    await bot.edit_message_reply_markup(
+        callback_query.from_user.id,
+        callback_query.message.message_id,
+        f"📅Выберите день и время: ",
+        reply_markup=create_calendar(
+            year,
+            month,
+        ),
     )
 
 
@@ -429,12 +487,3 @@ if __name__ == "__main__":
     schedulerHome.start()
     schedulerBijou.start()
     executor.start_polling(dp, skip_updates=True)
-
-
-# @dp.callback_query_handler(
-#     lambda c: c.data and c.data.startswith("calendar-"), state=States.delayed_change
-# )
-# async def process_callback_selected_day(callback_query: types.CallbackQuery):
-#     _, day, month, year = callback_query.data.split("-")
-#     print(f"{day}-{month}-{year}")
-#     print(callback_query.data)
