@@ -42,6 +42,7 @@ from preknown_errors import (
     tg_random_error,
     aiogram_wrong_string_length,
     failed_to_send_message,
+    scheduler_not_defined,
 )
 
 bot = Bot(token=TOKEN)
@@ -77,12 +78,13 @@ def get_scrapy():
 @dp.errors_handler()
 async def error_handler(update: types.Update, exception: Exception):
     await States.start.set()
-    if str(exception) == scrapy_error:
+    if str(exception) == scheduler_not_defined:
         await bot.send_message(admin_id, text="Забыл выбрать категорию")
         return
     elif str(exception) == tg_random_error or str(exception) == failed_to_send_message:
-        await bot.send_message(admin_id, text="Телеграм поносит, нажмите кнопку скип")
+        await bot.send_message(admin_id, text="Телеграм поносит, автоскипаю")
         await States.wait_state.set()
+        await post_or_skip(update)
         return
     elif str(exception) == aiogram_wrong_string_length:
         await bot.send_message(admin_id, text="Аиограм поносит, нажмите кнопку скип")
@@ -134,8 +136,11 @@ async def sender(message: types.Message):
     try:
         post_text, pic_url, post_url = scrapy.prepare_posts()
     except TypeError as e:
-        await bot.send_message(admin_id, "Посты закончились или какая-то ошибка")
-        await bot.send_message(admin_id, e)
+        if scrapy.count_of_products_in_db() < 1:
+            await bot.send_message(admin_id, "БД с продуктами пустая")
+        else:
+            await bot.send_message(admin_id, "Посты закончились или какая-то ошибка")
+
         await States.start.set()
         await main_menu(message)
         return
@@ -155,7 +160,10 @@ async def sender(message: types.Message):
     state=States.wait_state,
 )
 async def post_or_skip(message: types.Message):
-    user_message: str = message.text.lower()
+    try:
+        user_message = message.text.lower()
+    except AttributeError:
+        user_message = "скип"
     await States.sender.set()
     if user_message == "запостить":
         delay_data = {"post_text": post_text, "post_pic": pic_url, "chat_id": chat_id}
@@ -211,7 +219,7 @@ async def ask_for_parser(message: types.Message):
 async def call_parser(message: types.Message, state: FSMContext):
     await bot.send_message(
         admin_id,
-        text="Вызываю, подождите пару минут. Рекомендую /clear_wb или /clear чтобы очистить БД",
+        text="Вызвал, подождите пару минут.",
     )
     posts_num = await main(skidka_link, table_name=wb_table_name)
     await bot.send_message(admin_id, text=f"Сделано, число постов: {posts_num}")
@@ -229,9 +237,9 @@ async def main_menu(message: types.Message):
         )
         await bot.send_message(
             admin_id,
-            text=f"{hbold('*Главное меню*')}\n{bd_count_text}\n{tgbd_count_text}\n{delay_count_text}\n{scrapy.get_weather()}",
+            text=f"{hbold('Главное меню')}\n{bd_count_text}\n{tgbd_count_text}\n{delay_count_text}\n{scrapy.get_weather()}",
             reply_markup=get_main_kb(),
-            parse_mode="HTML"
+            parse_mode="HTML",
         )
     except NameError:
         await start_point(message)
@@ -380,6 +388,7 @@ async def start_point(message: types.Message):
     await bot.send_message(
         chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
     )
+
 
 # CALLBACKS
 @dp.callback_query_handler(

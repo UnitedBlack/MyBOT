@@ -55,7 +55,10 @@ class Scrapy:
         return filtered_products
 
     def format_post(self, item):
-        name = item.get("name")
+        try:
+            name = item.get("name")
+        except AttributeError:
+            name = item.get("name")
         discount_price = item.get("discount_price")
         price = item.get("price")
         star_rating = item.get("star_rating")

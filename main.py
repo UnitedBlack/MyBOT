@@ -20,7 +20,14 @@ async def operate_image(video):
     base_pic_url_element = await page.query_selector(
         '//img[@class="photo-zoom__preview j-zoom-image hide"]'
     )
-    base_pic_url = await base_pic_url_element.get_attribute("src")
+    try:
+        base_pic_url = await base_pic_url_element.get_attribute("src")
+    except:
+        await asyncio.sleep(1)
+        base_pic_url_element = await page.query_selector(
+            '//img[@class="photo-zoom__preview j-zoom-image hide"]'
+        )
+        base_pic_url = await base_pic_url_element.get_attribute("src")
     if video == False:
         pic_count += 1
     for num in range(1, pic_count):
@@ -37,7 +44,9 @@ async def parse_wildberries(urls, table_name, custom=False):
     logger.debug(f"Число вб страниц: {len(urls)}")
     for url in urls:
         try:
-            in_database = products_sql.is_product_in_database(url, table_name=table_name)
+            in_database = products_sql.is_product_in_database(
+                url, table_name=table_name
+            )
             if in_database:
                 product_in_db = True
                 logger.warning(f"{url} Product in DB")
@@ -163,7 +172,11 @@ async def parse_main_page(skidka_link, table_name):
             url_element = await card.query_selector(
                 '//div[@class="panel panel-flat padding9"]/a[1]'
             )
-            url = await url_element.get_attribute("href")
+            try:
+                url = await url_element.get_attribute("href")
+            except:
+                print("Не могу получить ссылку")
+                url = await url_element.get_attribute("href")
             list_of_urls.append(url)
     await parse_wildberries(list_of_urls, table_name)
 

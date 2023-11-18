@@ -8,3 +8,4 @@ aiogram_wrong_string_length = (
     "Wrong remote file identifier specified: wrong string length"
 )
 failed_to_send_message = 'Failed to send message #1 with the error message "wrong type of the web page content"'
+scheduler_not_defined = "name 'scheduler' is not defined"

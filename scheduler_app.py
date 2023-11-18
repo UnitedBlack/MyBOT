@@ -52,11 +52,18 @@ def get_free_time(scheduler, get_allowed=False):
     current_hour = datetime.now().hour
     minute = 0
     allowed_hours_dict = {}
-    if current_hour >= 22 or current_hour < 10:
+    if current_hour >= 22:
         current_day += 1
     days_in_month = calendar.monthrange(current_year, current_month)[1]
     for day in range(current_day, days_in_month + 1):
         allowed_hours = set(range(10, 23))
+        if current_hour < 10 and day == current_day or current_hour >= 22:
+            allowed_hours = set(range(10, 23))
+        else:
+            if day != current_day:
+                allowed_hours = set(range(10, 23))
+            else:
+                allowed_hours = set(range(max(current_hour + 1, 10), 23))
         for job in jobs:
             run_time = job.next_run_time
             if (
@@ -75,13 +82,17 @@ def get_free_time(scheduler, get_allowed=False):
     if get_allowed:
         return current_day, current_month, current_year, allowed_hours_dict
     else:
-        return (
-            current_day,
-            current_month,
-            current_year,
-            min(allowed_hours_dict[current_day]),
-            minute
-        )
+        while current_day <= days_in_month:
+            if allowed_hours_dict[current_day]:
+                return (
+                    current_day,
+                    current_month,
+                    current_year,
+                    min(allowed_hours_dict[current_day]),
+                    minute,
+                )
+            current_day += 1
+        return None
 
 
 def get_delayed_posts(scheduler):
@@ -129,3 +140,9 @@ def remove_all_jobs(scheduler):
     jobs = scheduler.get_jobs()
     for job in jobs:
         scheduler.remove_job(job.id)
+
+
+if __name__ == "__main__":
+    schedulerTP = BackgroundScheduler(jobstores=jobstores_tp)
+    schedulerTP.start()
+    print(get_free_time(schedulerTP))
