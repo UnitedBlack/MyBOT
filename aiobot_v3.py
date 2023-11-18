@@ -263,7 +263,7 @@ async def state_router(message: types.Message):
             scheduler = schedulerBijou
             chat_id = bijou_group_id
         case "Категории":
-            await start_point()
+            await start_point(message)
             return
         case _:
             await bot.send_message(admin_id, "Не работает")
