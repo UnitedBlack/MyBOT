@@ -222,10 +222,10 @@ async def call_parser(message: types.Message, state: FSMContext):
 @dp.message_handler(regexp="^Назад$", state="*")
 async def main_menu(message: types.Message):
     try:
-        bd_count_text = f"В бд ВБ {scrapy.count_of_products_in_db()} продуктов"
-        tgbd_count_text = f"В бд ТГ {scrapy.count_of_products_in_tgdb()} постов"
+        bd_count_text = f"В бд ВБ {hbold(scrapy.count_of_products_in_db())} продуктов"
+        tgbd_count_text = f"В бд ТГ {hbold(scrapy.count_of_products_in_tgdb())} постов"
         delay_count_text = (
-            f"Постов в отложке {len(scheduler_app.get_delayed_posts(scheduler))}"
+            f"Постов в отложке {hbold(len(scheduler_app.get_delayed_posts(scheduler)))}"
         )
         await bot.send_message(
             admin_id,
@@ -263,7 +263,7 @@ async def state_router(message: types.Message):
             scheduler = schedulerBijou
             chat_id = bijou_group_id
         case "Категории":
-            await start_point(message)
+            await start_point()
             return
         case _:
             await bot.send_message(admin_id, "Не работает")
