@@ -6,7 +6,7 @@ from main import main
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
-from aiogram.utils.markdown import hcode
+from aiogram.utils.markdown import hcode, hbold
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -215,6 +215,7 @@ async def call_parser(message: types.Message, state: FSMContext):
     )
     posts_num = await main(skidka_link, table_name=wb_table_name)
     await bot.send_message(admin_id, text=f"Сделано, число постов: {posts_num}")
+    await main_menu(message)
     await state.finish()
 
 
@@ -228,8 +229,9 @@ async def main_menu(message: types.Message):
         )
         await bot.send_message(
             admin_id,
-            text=f"*Главное меню*\n{bd_count_text}\n{tgbd_count_text}\n{delay_count_text}\n{scrapy.get_weather()}",
+            text=f"{hbold('*Главное меню*')}\n{bd_count_text}\n{tgbd_count_text}\n{delay_count_text}\n{scrapy.get_weather()}",
             reply_markup=get_main_kb(),
+            parse_mode="HTML"
         )
     except NameError:
         await start_point(message)
@@ -261,7 +263,7 @@ async def state_router(message: types.Message):
             scheduler = schedulerBijou
             chat_id = bijou_group_id
         case "Категории":
-            await start_point()
+            await start_point(message)
             return
         case _:
             await bot.send_message(admin_id, "Не работает")
