@@ -159,3 +159,22 @@ def create_time_kb() -> types.InlineKeyboardMarkup:
         time_kb.row(*row)
     time_kb.row(types.InlineKeyboardButton("Назад", callback_data="back-time"))
     return time_kb
+
+
+def get_time_back_kb() -> types.ReplyKeyboardMarkup:
+    time_back_kb = types.InlineKeyboardMarkup()
+    time_back_kb.add(
+        types.InlineKeyboardButton("Изменить время", callback_data="change-time")
+    )
+    return time_back_kb
+
+
+def get_custom_post_kb() -> types.ReplyKeyboardMarkup:
+    custom_post_kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    custom_post_kb.add(
+        types.KeyboardButton("Запостить"),
+        types.KeyboardButton("Редактировать описание"),
+        types.KeyboardButton("Редактировать фото"),
+        types.KeyboardButton("Назад"),
+    )
+    return custom_post_kb

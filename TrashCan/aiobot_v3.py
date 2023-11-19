@@ -1,8 +1,8 @@
-import parser_app
+import formatter_app
 import scheduler_app
 import logging
 from sql_data import posts_sql, products_sql
-from main import main
+from scraper_app import main
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
@@ -38,7 +38,6 @@ from configure_bot import (
 from pprint import pprint
 from preknown_errors import (
     playwright_random_error,
-    scrapy_error,
     tg_random_error,
     aiogram_wrong_string_length,
     failed_to_send_message,
@@ -68,7 +67,7 @@ class States(StatesGroup):
 
 def get_scrapy():
     global scrapy
-    scrapy = parser_app.Scrapy(
+    scrapy = formatter_app.Scrapy(
         skidka_link=skidka_link,
         wb_table_name=wb_table_name,
         tg_table_name=tg_table_name,
@@ -99,6 +98,7 @@ async def error_handler(update: types.Update, exception: Exception):
         return
 
 
+# CUSTOM POST MENU ============================================== CUSTOM POST MENU
 @dp.message_handler(state=States.custom_post_link)
 async def create_custom_post(message: types.Message):
     user_link = [message.text]
@@ -130,6 +130,10 @@ async def create_custom_post(message: types.Message):
     await delayed_menu(message)
 
 
+# =======================================================================
+
+
+# DAYVINCHIK ================================================== DAYVINCHIK
 @dp.message_handler(state=States.sender)
 async def sender(message: types.Message):
     global post_url, pic_url, post_text
@@ -137,7 +141,9 @@ async def sender(message: types.Message):
         post_text, pic_url, post_url = scrapy.prepare_posts()
     except TypeError as e:
         if scrapy.count_of_products_in_db() < 1:
-            await bot.send_message(admin_id, "БД с продуктами пустая")
+            await bot.send_message(admin_id, "БД с товарами пустая")
+        elif scrapy.count_of_products_in_db == scrapy.count_of_products_in_tgdb:
+            await bot.send_message(admin_id, "Закончились товары")
         else:
             await bot.send_message(admin_id, "Посты закончились или какая-то ошибка")
 
@@ -176,6 +182,10 @@ async def post_or_skip(message: types.Message):
         await sender(message=message)
 
 
+# ==========================================================================
+
+
+# MAIN MENU ATTRIBUTES ===================================== MAIN MENU ATTRIBUTES
 @dp.message_handler(regexp="^Листать посты$", state="*")
 async def select_posts(message: types.Message):
     await States.sender.set()
@@ -210,7 +220,7 @@ async def delayed_menu(message: types.Message):
 
 @dp.message_handler(regexp="^Парсер$", state="*")
 async def ask_for_parser(message: types.Message):
-    message_text = f"Вызываю парсер?\nСейчас в базе данных {scrapy.count_of_products_in_db()} продуктов"
+    message_text = f"Вызываю парсер?\nСейчас в базе данных {scrapy.count_of_products_in_db()} товаров"
     await bot.send_message(admin_id, text=message_text, reply_markup=get_parser_kb())
     await States.parser.set()
 
@@ -227,10 +237,14 @@ async def call_parser(message: types.Message, state: FSMContext):
     await state.finish()
 
 
+# ================================================================================
+
+
+# MAIN MENU ============================================================ MAIN MENU
 @dp.message_handler(regexp="^Назад$", state="*")
 async def main_menu(message: types.Message):
     try:
-        bd_count_text = f"В бд ВБ {hbold(scrapy.count_of_products_in_db())} продуктов"
+        bd_count_text = f"В бд ВБ {hbold(scrapy.count_of_products_in_db())} товаров"
         tgbd_count_text = f"В бд ТГ {hbold(scrapy.count_of_products_in_tgdb())} постов"
         delay_count_text = (
             f"Постов в отложке {hbold(len(scheduler_app.get_delayed_posts(scheduler)))}"
@@ -281,6 +295,17 @@ async def state_router(message: types.Message):
     await main_menu(message)
 
 
+@dp.message_handler(commands=["start"])
+async def start_point(message: types.Message):
+    await bot.send_message(
+        chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
+    )
+
+
+# ===============================================================================
+
+
+# DELAYED MENU ===================================================== DELAYED MENU
 @dp.message_handler(
     regexp="^Удалить пост|Изменить время|Кастомный пост|Очистить всю отложку$",
     state=States.delayed_menu,
@@ -361,6 +386,10 @@ async def delete_delayed_post(message: types.Message, state: FSMContext):
     await delayed_menu(message)
 
 
+# =============================================================================
+
+
+# CLEAR DATABASE ================================================ CLEAR DATABASE
 @dp.message_handler(regexp="^Очистить ТГ БД$", state=States.clear_database)
 async def clear_tg(message: types.Message):
     posts_sql.delete_all_records(tg_table_name)
@@ -383,14 +412,10 @@ async def clear_db(message: types.Message):
     await States.clear_database.set()
 
 
-@dp.message_handler(commands=["start"])
-async def start_point(message: types.Message):
-    await bot.send_message(
-        chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
-    )
+# ================================================================================
 
 
-# CALLBACKS
+# CALLBACKS ============================================================ CALLBACKS
 @dp.callback_query_handler(
     lambda c: c.data and c.data.startswith("prev-month"),
     state="*",
@@ -488,6 +513,8 @@ async def send_calendar_keyboard(callback_query: types.CallbackQuery):
         ),
     )
 
+
+# ==============================================================================
 
 if __name__ == "__main__":
     schedulerTP = BackgroundScheduler(jobstores=jobstores_tp)

@@ -8,9 +8,6 @@ import re
 import asyncio
 from pprint import pprint
 
-super_list = []
-index = 0
-
 
 async def operate_image(video):
     picture_list = []
@@ -30,13 +27,16 @@ async def operate_image(video):
         base_pic_url = await base_pic_url_element.get_attribute("src")
     if video == False:
         pic_count += 1
-    for num in range(1, pic_count):
-        new_pic_url = base_pic_url.replace("1.webp", str(num)) + ".webp"
-        picture_list.append(new_pic_url)
+    if pic_count == 1:
+        picture_list.append(base_pic_url)
+    else:
+        for num in range(1, pic_count):
+            new_pic_url = base_pic_url.replace("1.webp", str(num)) + ".webp"
+            picture_list.append(new_pic_url)
     return picture_list[:5]
 
 
-async def parse_wildberries(urls, table_name, custom=False):
+async def parse_wildberries(urls, table_name):
     global posts_count
     posts_count = 0
     list_to_return = []
@@ -48,7 +48,6 @@ async def parse_wildberries(urls, table_name, custom=False):
                 url, table_name=table_name
             )
             if in_database:
-                product_in_db = True
                 logger.warning(f"{url} Product in DB")
                 continue
             logger.info(f"{url} not in DB")
@@ -96,7 +95,14 @@ async def parse_wildberries(urls, table_name, custom=False):
                 .replace(" ", "")
                 .replace("\xa0", "")
             )
-
+            try:
+                description_element = await page.query_selector(
+                    '//p[@class="collapsable__text"]'
+                )
+                description_text = await description_element.text_content()
+                description = description_text.split(".")[1:3]
+            except:
+                description = False
             try:
                 star_rating_element = await page.query_selector(
                     '//span[@class="product-review__rating address-rate-mini address-rate-mini--sm"]'
@@ -131,7 +137,6 @@ async def parse_wildberries(urls, table_name, custom=False):
 
             list_of_pictures = await operate_image(is_exist_video)
             list_to_return.append(name)
-            # global data
             data = {
                 "wb_id": wb_id[0],
                 "name": name,
@@ -149,8 +154,6 @@ async def parse_wildberries(urls, table_name, custom=False):
         except AttributeError as e:
             logger.critical(f"Error {e} in url \n{url}")
             continue
-        if custom:
-            return data
 
 
 async def parse_main_page(skidka_link, table_name):
@@ -181,17 +184,13 @@ async def parse_main_page(skidka_link, table_name):
     await parse_wildberries(list_of_urls, table_name)
 
 
-async def main(link, table_name, custom=False):
+async def main(link, table_name):
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=False)
         context = await browser.new_context()
         global page
         page = await context.new_page()
-        if custom:
-            data = await parse_wildberries(link, table_name, custom=True)
-            return data
-        else:
-            await parse_main_page(link, table_name)
+        await parse_main_page(link, table_name)
     print("Done")
     return posts_count
 
@@ -201,7 +200,9 @@ logger.setLevel(logging.DEBUG)
 
 
 if __name__ == "__main__":
-    asyncio.run(main(link="https://skidka7.com/discount/cwomen/all"))
+    asyncio.run(
+        main(link="https://skidka7.com/discount/cwomen/all", table_name="tp_wb")
+    )
     handler = logging.StreamHandler()
     handler.setLevel(logging.DEBUG)
     formatter = colorlog.ColoredFormatter(
