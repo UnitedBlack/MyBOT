@@ -191,7 +191,7 @@ async def parse_main_page(skidka_link, table_name):
 
 async def main(link, table_name):
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         global page
         page = await context.new_page()
