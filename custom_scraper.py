@@ -63,9 +63,13 @@ async def parse_wildberries(url):
     price_text = await price_text_element.text_content()
     price = price_text.replace("₽", "").replace(" ", "").replace("\xa0", "")
     discount_price_text_element = await page.query_selector(
-        '//del[@class="price-block__old-price j-wba-card-item-show"]'
+        '//del[@class="price-block__old-price"]'
     )
-    discount_price_text = await discount_price_text_element.text_content()
+    try:
+        discount_price_text = await discount_price_text_element.text_content()
+    except AttributeError:
+        await asyncio.sleep(3)
+        discount_price_text = await discount_price_text_element.text_content()
     discount_price = (
         discount_price_text.replace("₽", "").replace(" ", "").replace("\xa0", "")
     )
@@ -125,7 +129,7 @@ async def parse_wildberries(url):
 
 async def main(url):
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=False)
         context = await browser.new_context()
         global page
         page = await context.new_page()

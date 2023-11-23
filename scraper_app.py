@@ -87,9 +87,14 @@ async def parse_wildberries(urls, table_name):
             price = price_text.replace("₽", "").replace(" ", "").replace("\xa0", "")
 
             discount_price_text_element = await page.query_selector(
-                '//del[@class="price-block__old-price j-wba-card-item-show"]'
+                '//del[@class="price-block__old-price"]'
             )
-            discount_price_text = await discount_price_text_element.text_content()
+            try:
+                discount_price_text = await discount_price_text_element.text_content()
+            except AttributeError:
+                await asyncio.sleep(1)
+                discount_price_text = await discount_price_text_element.text_content()
+                
             discount_price = (
                 discount_price_text.replace("₽", "")
                 .replace(" ", "")
@@ -161,7 +166,7 @@ async def parse_main_page(skidka_link, table_name):
 
     list_of_urls = []
 
-    for current_page in range(1, 2):
+    for current_page in range(1, 3):
         logger.info(f"Current page: {current_page}")
         await page.goto(f"{skidka_link}?page={current_page}")
         cards = await page.query_selector_all(

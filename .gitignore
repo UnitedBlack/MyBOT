@@ -4,3 +4,4 @@ venv/
 configure_bot.py
 venv_win/
 configure_bot.py
+sql_data/

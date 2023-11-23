@@ -15,7 +15,9 @@ time_h = int(datetime.now().strftime("%H"))
 
 def post_job(post):
     chat_id = post["chat_id"]
-    media = [types.InputMediaPhoto(url, parse_mode="HTML") for url in post["post_pic"]]
+    media = post[
+        "post_pic"
+    ]  # [types.InputMediaPhoto(url, parse_mode="HTML") for url in post["post_pic"]]
     media[0].caption = post["post_text"]
     bot.send_media_group(chat_id=chat_id, media=media)
 

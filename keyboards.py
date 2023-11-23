@@ -178,3 +178,23 @@ def get_custom_post_kb() -> types.ReplyKeyboardMarkup:
         types.KeyboardButton("Назад"),
     )
     return custom_post_kb
+
+
+def get_edit_photo_kb() -> types.ReplyKeyboardMarkup:
+    edit_photo_kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    edit_photo_kb.add(
+        types.KeyboardButton("Добавить фото"),
+        types.KeyboardButton("Удалить фото"),
+        types.KeyboardButton("Закончить"),
+        types.KeyboardButton("Выйти без сохранения"),
+    )
+    return edit_photo_kb
+
+
+def get_photo_editor_kb() -> types.ReplyKeyboardMarkup:
+    photo_editor_kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    photo_editor_kb.add(
+        types.KeyboardButton("Закончить"),
+        types.KeyboardButton("Выйти без сохранения"),
+    )
+    return photo_editor_kb

@@ -25,18 +25,14 @@ from keyboards import (
     create_time_kb,
     get_time_back_kb,
     get_custom_post_kb,
+    get_edit_photo_kb,
+    get_photo_editor_kb,
 )
-from apscheduler.schedulers.background import BackgroundScheduler
 from ast import literal_eval
 from configure_bot import (
     TOKEN,
     admin_id,
-    tp_group_id,
-    home_group_id,
-    bijou_group_id,
-    jobstores_tp,
-    jobstores_home,
-    jobstores_bijou,
+    categories_config,
 )
 from pprint import pprint
 from preknown_errors import (
@@ -51,6 +47,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+user_pics = []
 
 
 class States(StatesGroup):
@@ -64,6 +61,8 @@ class States(StatesGroup):
     custom_post = State()
     custom_post_link = State()
     custom_post_menu = State()
+    edit_description = State()
+    edit_picture = State()
     clear_database = State()
     parser = State()
     clear_delayed = State()
@@ -83,6 +82,7 @@ async def error_handler(update: types.Update, exception: Exception):
     await States.start.set()
     if str(exception) == scheduler_not_defined:
         await bot.send_message(admin_id, text="Забыл выбрать категорию")
+        await start_point(update.message)
         return
     elif str(exception) == tg_random_error or str(exception) == failed_to_send_message:
         await bot.send_message(admin_id, text="Телеграм поносит, автоскипаю")
@@ -103,46 +103,105 @@ async def error_handler(update: types.Update, exception: Exception):
 
 
 # CUSTOM POST MENU ============================================== CUSTOM POST MENU
-@dp.message_handler(state=States.custom_post_menu)
-async def custom_post_menu(message: types.Message):
+@dp.message_handler(regexp="^Запостить$", state=States.custom_post_menu)
+async def delay_custom_post(message: types.Message):
+    custom_time = (
+        calendar_hour,
+        calendar_minute,
+        calendar_day,
+        calendar_month,
+        calendar_year,
+    )
+    delay_data = {
+        "post_text": post_text,
+        "post_pic": pictures,
+    }  # user_pics if user_pics else pics
+    scheduler_app.schedule_post(delay_data, scheduler, ad=True, custom_time=custom_time)
+    await bot.send_message(
+        admin_id,
+        text=f"Добавил в отложку, время {calendar_hour}:{calendar_minute} {calendar_day}-{calendar_month}",
+    )
+    await delayed_menu(message)
+
+
+@dp.message_handler(state=States.edit_description)
+async def edit_description(message: types.Message):
+    await States.custom_post_menu.set()
+    global post_text
     user_message = message.text
-    match user_message:
-        case "Запостить":
-            ...
-        case "Редактировать описание":
-            ...
-        case "Редактировать фото":
-            ...
-        
+    post_text = user_message
+    pictures[0].caption = user_message
+    await bot.send_message(admin_id, text=f"Так будет выглядеть ваш пост:")
+    await bot.send_media_group(chat_id=admin_id, media=pictures)
+
+
+@dp.message_handler(regexp="^Редактировать описание$", state=States.custom_post_menu)
+async def ask_edit_description(message: types.Message):
+    await bot.send_message(
+        admin_id,
+        text=f"{post_text}\n\nВот текст поста, пришлите текст для редактирования",
+        parse_mode="HTML",
+    )
+    await States.edit_description.set()
+
+
+@dp.message_handler(regexp="^Выйти без сохранения$", state="*")
+async def exit_without_saving(message: types.Message):
+    await delayed_menu(message)
+
+
+@dp.message_handler(content_types=["photo"], state=States.edit_picture)
+async def edit_picture(message: types.Message):
+    await bot.send_message(
+        admin_id, "Сохранил. Ещё одну?", reply_markup=get_photo_editor_kb()
+    )  # Клавиатуру типа "ВСЕ ХВАТИТ"
+    user_pic = message.photo[-1].file_id  # Get the largest size of the photo
+    user_pics.append(user_pic)  # Store the photo
+
+
+@dp.message_handler(state=States.edit_picture)
+async def process_pictures(message: types.Message):
+    if message.text == "Закончить":
+        global pictures
+        pictures = [InputMediaPhoto(media=pic, parse_mode="HTML") for pic in user_pics]
+        pictures[0].caption = post_text
+        await bot.send_media_group(chat_id=admin_id, media=pictures)
+        user_pics.clear()  # Clear the list for the next set of photos
+        await bot.send_message(
+            admin_id, "Вот ваш пост", reply_markup=get_custom_post_kb()
+        )
+        await States.custom_post_menu.set()
+    elif message.text == "Добавить фото":
+        await bot.send_message(admin_id, "Присылайте по ОДНОЙ фотографии")
+    elif message.text == "Удалить фото":
+        ...
+
+
+@dp.message_handler(regexp="^Редактировать фото$", state=States.custom_post_menu)
+async def ask_edit_picture(message: types.Message):
+    await States.edit_picture.set()
+    await bot.send_message(
+        admin_id, "Вы в редакторе фото", reply_markup=get_edit_photo_kb()
+    )
+    pictures = [InputMediaPhoto(media=pic, parse_mode="HTML") for pic in pics]
+    pictures[0].caption = "Это фотографии поста, как хотите изменить?"
+    await bot.send_media_group(chat_id=admin_id, media=pictures)
 
 
 @dp.message_handler(state=States.custom_post_link)
 async def create_custom_post(message: types.Message):
+    global post_text, pics, custom_data
     user_link = [message.text]
     await bot.send_message(
         admin_id, text="Вызываю парсер", reply_markup=get_custom_post_kb()
     )
-    data = await custom_scraper.main(user_link[0])
-    post_text = scrapy.format_post(data)
-    pics = literal_eval(data["pic_url"])
+    custom_data = await custom_scraper.main(user_link[0])
+    post_text = scrapy.format_post(custom_data)
+    pics = literal_eval(custom_data["pic_url"])
     pictures = [InputMediaPhoto(media=pic, parse_mode="HTML") for pic in pics]
     pictures[0].caption = post_text
     await bot.send_media_group(chat_id=admin_id, media=pictures)
     await States.custom_post_menu.set()
-    # custom_time = (
-    #     calendar_hour,
-    #     calendar_minute,
-    #     calendar_day,
-    #     calendar_month,
-    #     calendar_year,
-    # )
-    # delay_data = {"post_text": post_text, "post_pic": pics}
-    # scheduler_app.schedule_post(delay_data, scheduler, ad=True, custom_time=custom_time)
-    # await bot.send_message(
-    #     admin_id,
-    #     text=f"Добавил в отложку, время {calendar_hour}:{calendar_minute} {calendar_day}-{calendar_month}",
-    # )
-    # await delayed_menu(message)
 
 
 # =======================================================================
@@ -240,7 +299,7 @@ async def ask_for_parser(message: types.Message):
     await States.parser.set()
 
 
-@dp.message_handler(regexp="^Вызвать парсер$", state=States.parser)
+@dp.message_handler(regexp="^Вызвать парсер$", state=States.parser, run_task=True)
 async def call_parser(message: types.Message, state: FSMContext):
     await bot.send_message(
         admin_id,
@@ -274,40 +333,23 @@ async def main_menu(message: types.Message):
         await start_point(message)
 
 
-@dp.message_handler(
-    regexp="^Категории|Одежда тпшкам|Для дома|Бижутерия|Косметика$", state="*"
-)
+@dp.message_handler(regexp="^Категории|Одежда тпшкам|Для дома|Бижутерия$", state="*")
 async def state_router(message: types.Message):
     global skidka_link, scheduler, chat_id, wb_table_name, tg_table_name
-    match message.text:
-        case "Одежда тпшкам":
-            skidka_link = "https://skidka7.com/discount/cwomen/all"
-            wb_table_name = "tp_wb"
-            tg_table_name = "tp_tg"
-            scheduler = schedulerTP
-            skidka_link = "https://skidka7.com/discount/cwomen/all"
-            chat_id = tp_group_id
-        case "Для дома":
-            skidka_link = "https://skidka7.com/discount/dom/all"
-            wb_table_name = "home_wb"
-            tg_table_name = "home_tg"
-            scheduler = schedulerHome
-            chat_id = home_group_id
-        case "Бижутерия":
-            skidka_link = "https://skidka7.com/discount/jew/all"
-            wb_table_name = "bijou_wb"
-            tg_table_name = "bijou_tg"
-            scheduler = schedulerBijou
-            chat_id = bijou_group_id
-        case "Категории":
-            await start_point(message)
-            return
-        case _:
-            await bot.send_message(admin_id, "Не работает")
-            return
+    config = categories_config.get(message.text)
+    if config:
+        skidka_link = config["skidka_link"]
+        wb_table_name = config["wb_table_name"]
+        tg_table_name = config["tg_table_name"]
+        scheduler = config["scheduler"]
+        chat_id = config["chat_id"]
 
-    get_scrapy()
-    await main_menu(message)
+        get_scrapy()
+        await main_menu(message)
+    elif message.text == "Категории":
+        await start_point(message)
+    else:
+        await bot.send_message(admin_id, "Не работает")
 
 
 @dp.message_handler(commands=["start"])
@@ -556,10 +598,9 @@ async def change_inline_time(callback_query: types.CallbackQuery):
 # ==============================================================================
 
 if __name__ == "__main__":
-    schedulerTP = BackgroundScheduler(jobstores=jobstores_tp)
-    schedulerHome = BackgroundScheduler(jobstores=jobstores_home)
-    schedulerBijou = BackgroundScheduler(jobstores=jobstores_bijou)
-    schedulerTP.start()
-    schedulerHome.start()
-    schedulerBijou.start()
     executor.start_polling(dp, skip_updates=True)
+
+# Фикс отложки, опять со временем проеб, доделать редактирование поста
+# Мб добавить редактор в винчик
+# сделать так что бы можно было в отложке выбирать время более гибко не топорно 21-00 21-30
+# например, выберите час > выберите минуты
