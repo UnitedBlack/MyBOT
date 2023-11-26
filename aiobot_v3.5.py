@@ -85,12 +85,12 @@ async def error_handler(update: types.Update, exception: Exception):
         await bot.send_message(admin_id, text="Забыл выбрать категорию")
         await start_point(update.message)
         return
-    elif str(exception) == tg_random_error or str(exception) == failed_to_send_message:
+    elif str(exception) in [tg_random_error, failed_to_send_message]:
         await bot.send_message(admin_id, text="Телеграм поносит, автоскипаю")
         await States.wait_state.set()
         await post_or_skip(update)
         return
-    elif str(exception) == aiogram_wrong_string_length or str(exception) == aiogram_badrequest:
+    elif str(exception) in [aiogram_wrong_string_length, aiogram_badrequest]:
         await bot.send_message(admin_id, text="Аиограм поносит, нажмите кнопку скип")
         await States.wait_state.set()
         return
