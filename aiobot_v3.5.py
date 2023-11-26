@@ -251,7 +251,6 @@ async def post_or_skip(message: types.Message):
         scheduler_app.schedule_post(delay_data, scheduler)
         scrapy.append_data_to_db(post_url, "Liked")
         await sender(message=message)
-
     elif user_message == "скип":
         scrapy.append_data_to_db(post_url, "Disliked")
         await sender(message=message)

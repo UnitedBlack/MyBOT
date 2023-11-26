@@ -15,9 +15,8 @@ time_h = int(datetime.now().strftime("%H"))
 
 def post_job(post):
     chat_id = post["chat_id"]
-    media = post[
-        "post_pic"
-    ]  # [types.InputMediaPhoto(url, parse_mode="HTML") for url in post["post_pic"]]
+    media = [types.InputMediaPhoto(url, parse_mode="HTML") for url in post["post_pic"]]
+    # post["post_pic"]
     media[0].caption = post["post_text"]
     bot.send_media_group(chat_id=chat_id, media=media)
 
@@ -147,4 +146,16 @@ def remove_all_jobs(scheduler):
 if __name__ == "__main__":
     schedulerTP = BackgroundScheduler(jobstores=jobstores_tp)
     schedulerTP.start()
-    print(get_free_time(schedulerTP))
+    # print(get_free_time(schedulerTP))
+    # data = {
+    #     "post_text": '💯<b>Держатель для туалетной бумаги настенный с полкой</b>\n\n💰Цена: <s>749</s>₽ <b>404</b>₽ (скидка <b>46</b>%)\n\n⭐️<b>Хороший рейтинг</b>: <b>5.0</b>\n\n🌈Цвет: <b>черный</b>\n\n🔗<b>Купить здесь:</b> <a href="https://goo.su/tDZ275">ссылка на товар</a>',
+    #     "post_pic": [
+    #         "https://basket-12.wb.ru/vol1719/part171902/171902267/images/big/1.webp",
+    #         "https://basket-12.wb.ru/vol1719/part171902/171902267/images/big/2.webp",
+    #         "https://basket-12.wb.ru/vol1719/part171902/171902267/images/big/3.webp",
+    #         "https://basket-12.wb.ru/vol1719/part171902/171902267/images/big/4.webp",
+    #         "https://basket-12.wb.ru/vol1719/part171902/171902267/images/big/5.webp",
+    #     ],
+    #     "chat_id": "-1001553355442",
+    # }
+    # schedule_post(data=data, scheduler=schedulerTP, custom_time=(14, 47, 26, 11, 2023))
