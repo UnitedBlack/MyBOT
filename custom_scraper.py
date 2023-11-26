@@ -1,8 +1,6 @@
 from playwright.async_api import async_playwright
 from playwright._impl._api_types import TimeoutError as TimeoutPlaywright
 import time
-import logging
-import colorlog
 import re
 import asyncio
 from pprint import pprint

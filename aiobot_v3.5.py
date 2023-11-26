@@ -41,6 +41,7 @@ from preknown_errors import (
     aiogram_wrong_string_length,
     failed_to_send_message,
     scheduler_not_defined,
+    aiogram_badrequest
 )
 
 bot = Bot(token=TOKEN)
@@ -89,7 +90,7 @@ async def error_handler(update: types.Update, exception: Exception):
         await States.wait_state.set()
         await post_or_skip(update)
         return
-    elif str(exception) == aiogram_wrong_string_length:
+    elif str(exception) == aiogram_wrong_string_length or str(exception) == aiogram_badrequest:
         await bot.send_message(admin_id, text="Аиограм поносит, нажмите кнопку скип")
         await States.wait_state.set()
         return
@@ -598,7 +599,7 @@ async def change_inline_time(callback_query: types.CallbackQuery):
 # ==============================================================================
 
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp)
 
 # Фикс отложки, опять со временем проеб, доделать редактирование поста
 # Мб добавить редактор в винчик
