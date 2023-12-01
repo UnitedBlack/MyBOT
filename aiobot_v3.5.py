@@ -35,14 +35,7 @@ from configure_bot import (
     categories_config,
 )
 from pprint import pprint
-from preknown_errors import (
-    playwright_random_error,
-    tg_random_error,
-    aiogram_wrong_string_length,
-    failed_to_send_message,
-    scheduler_not_defined,
-    aiogram_badrequest
-)
+from preknown_errors import *
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())

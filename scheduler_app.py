@@ -1,6 +1,5 @@
 import telebot
 from apscheduler.triggers.cron import CronTrigger
-from datetime import datetime, timedelta
 from datetime import datetime
 from telebot import types
 from random import randint
@@ -53,9 +52,13 @@ def get_free_time(scheduler, get_allowed=False):
     current_hour = datetime.now().hour
     minute = 0
     allowed_hours_dict = {}
-    if current_hour >= 22:
-        current_day += 1
     days_in_month = calendar.monthrange(current_year, current_month)[1]
+    if current_hour >= 22:
+        if days_in_month < current_day + 1:
+            current_day = 1
+            current_month += 1
+        else:
+            current_day += 1
     for day in range(current_day, days_in_month + 1):
         allowed_hours = set(range(10, 23))
         if current_hour < 10 and day == current_day or current_hour >= 22:
