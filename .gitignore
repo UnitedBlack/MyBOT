@@ -7,3 +7,6 @@ configure_bot.py
 sql_data/
 sql_data/sources/
 sql_data/sources/scheduler_data/
+ sql_data/sources/scheduler_data/jobstorage_home
+ sql_data/sources/scheduler_data/jobstore_tp
+  sql_data/sources/scheduler_data/jobstorage_bijou
