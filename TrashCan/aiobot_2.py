@@ -1,7 +1,7 @@
 import parser_app
 import scheduler_app
 from sql_data import posts_sql, products_sql
-from main import main
+from TrashCan.main_test import main
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor

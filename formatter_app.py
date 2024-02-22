@@ -102,6 +102,7 @@ class Scrapy:
             posts_list: list = self.wbparse()
         except:
             return False
+        
         for item in posts_list:
             posts_list.pop(0)
             url = item.get("url")

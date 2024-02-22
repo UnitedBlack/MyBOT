@@ -58,9 +58,6 @@ async def parse_wildberries(urls, table_name):
                 continue
 
             await page.wait_for_selector("h1")
-            await page.wait_for_selector(
-                '//div[@class="details__header-wrap hide-mobile"]'
-            )
             wb_id = re.findall(r"\d+", url)
             try:
                 sold_out_element = await page.query_selector(
@@ -94,7 +91,7 @@ async def parse_wildberries(urls, table_name):
             except AttributeError:
                 await asyncio.sleep(1)
                 discount_price_text = await discount_price_text_element.text_content()
-                
+
             discount_price = (
                 discount_price_text.replace("₽", "")
                 .replace(" ", "")
@@ -205,9 +202,6 @@ logger.setLevel(logging.DEBUG)
 
 
 if __name__ == "__main__":
-    asyncio.run(
-        main(link="https://skidka7.com/discount/cwomen/all", table_name="tp_wb")
-    )
     handler = logging.StreamHandler()
     handler.setLevel(logging.DEBUG)
     formatter = colorlog.ColoredFormatter(
@@ -226,4 +220,7 @@ if __name__ == "__main__":
     )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    asyncio.run(
+        main(link="https://skidka7.com/discount/cwomen/all", table_name="tp_wb")
+    )
     logger.debug("Done")

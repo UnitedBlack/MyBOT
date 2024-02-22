@@ -1,4 +1,4 @@
-from main import parse_main_page
+from TrashCan.main_test import parse_main_page
 import asyncio
 
 async def bebra():

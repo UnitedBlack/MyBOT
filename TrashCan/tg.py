@@ -1,5 +1,5 @@
 import asyncio
-import main
+import TrashCan.main_test as main_test
 import sql
 import tg_sql
 
@@ -100,12 +100,12 @@ async def process_callback_post(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, f'ID сообщения: {message_id}')
 
     
-async def main():
+async def main_test():
     await dp.start_polling(bot)
     
     
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(main_test())
     
     
 # @dp.message(Command("update"))

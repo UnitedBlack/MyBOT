@@ -10,7 +10,7 @@ from configure_bot import TOKEN, GOO_SO_TOKEN
 from datetime import datetime
 import sql, tg_sql, ast, logging, json, os, asyncio
 from pprint import pprint
-from main import main
+from TrashCan.main_test import main
 import requests
 
 # добавить кнопку очистить всю отложку
