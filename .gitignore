@@ -167,6 +167,7 @@ configure_bot.py
 venv_win/
 configure_bot.py
 sql_data/
+TrashCan/
 sql_data/sources/
 sql_data/sources/scheduler_data/
 sql_data/sources/scheduler_data/jobstorage_home
