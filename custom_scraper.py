@@ -41,7 +41,7 @@ async def parse_wildberries(url):
         await page.goto(url)
     time.sleep(2)
     await page.wait_for_selector("h1")
-    await page.wait_for_selector('//div[@class="details__header-wrap hide-mobile"]')
+    await page.wait_for_selector('//div[@class="product-page__header-wrap"]')
     wb_id = re.findall(r"\d+", url)
     try:
         sold_out_element = await page.query_selector(
@@ -55,8 +55,9 @@ async def parse_wildberries(url):
 
     name_element = await page.query_selector("h1")
     name = await name_element.text_content()
+    await page.wait_for_selector('//ins[@class="price-block__final-price wallet"]')
     price_text_element = await page.query_selector(
-        '//ins[@class="price-block__final-price"]'
+        '//ins[@class="price-block__final-price wallet"]'
     )
     price_text = await price_text_element.text_content()
     price = price_text.replace("₽", "").replace(" ", "").replace("\xa0", "")
@@ -127,7 +128,8 @@ async def parse_wildberries(url):
 
 async def main(url):
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        print("AAAAAAAAAAAAAA")
+        browser = await p.firefox.launch(headless=True)
         context = await browser.new_context()
         global page
         page = await context.new_page()
@@ -137,4 +139,4 @@ async def main(url):
 
 
 if __name__ == "__main__":
-    asyncio.run(main(url="https://www.wildberries.ru/catalog/148176220/detail.aspx"))
+    asyncio.run(main(url="https://www.wildberries.ru/catalog/21291493/detail.aspx"))
