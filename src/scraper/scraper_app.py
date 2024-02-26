@@ -162,7 +162,7 @@ def parse_wildberries(
     print(data)
 
 
-def start():
+def parse():
     global driver
     links = run_spider()
     try:
@@ -180,4 +180,4 @@ def start():
 
 
 if __name__ == "__main__":
-    start()
+    parse()
