@@ -128,7 +128,6 @@ async def parse_wildberries(url):
 
 async def main(url):
     async with async_playwright() as p:
-        print("AAAAAAAAAAAAAA")
         browser = await p.firefox.launch(headless=True)
         context = await browser.new_context()
         global page

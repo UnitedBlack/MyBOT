@@ -43,6 +43,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 user_pics = []
 
+# dotenv!!!
+
 
 class States(StatesGroup):
     delayed_menu = State()

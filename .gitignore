@@ -165,7 +165,6 @@ __pycache__/
 venv/
 configure_bot.py
 venv_win/
-configure_bot.py
 sql_data/
 TrashCan/
 sql_data/sources/

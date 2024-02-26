@@ -76,9 +76,9 @@ async def parse_wildberries(urls, table_name):
                 continue
             name_element = await page.query_selector("h1")
             name = await name_element.text_content()
-
+            await page.wait_for_selector('//ins[@class="price-block__final-price wallet"]')
             price_text_element = await page.query_selector(
-                '//ins[@class="price-block__final-price"]'
+                '//ins[@class="price-block__final-price wallet"]'
             )
             price_text = await price_text_element.text_content()
             price = price_text.replace("₽", "").replace(" ", "").replace("\xa0", "")
