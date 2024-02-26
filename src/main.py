@@ -1,9 +1,9 @@
 import formatter_app
-import scheduler_app
-import custom_scraper
+import src.scheduler_app as scheduler_app
+import old.custom_scraper as custom_scraper
 import logging
 from sql_data import posts_sql, products_sql
-from scraper_app import main
+from old.scraper_app import main
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
