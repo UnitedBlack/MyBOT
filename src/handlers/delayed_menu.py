@@ -1,10 +1,12 @@
-from aiogram import types, Router
-from aiogram.filters import CommandStart
+from aiogram import types, Router, F
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 delayed_menu_router = Router()
 
 
-@delayed_menu_router.message_handler(
+@delayed_menu_router.message(
     regexp="^Удалить пост|Изменить время|Кастомный пост|Очистить всю отложку$",
     state=States.delayed_menu,
 )
@@ -31,14 +33,14 @@ async def ask_delayed_id(message: types.Message):
             await States.clear_delayed.set()
 
 
-@delayed_menu_router.message_handler(regexp="^Да$", state=States.clear_delayed)
+@delayed_menu_router.message(regexp="^Да$", state=States.clear_delayed)
 async def clear_delayed_posts(message: types.Message):
     scheduler_app.remove_all_jobs(scheduler)
     await bot.send_message(admin_id, "Удалил все посты из отложки")
     await delayed_menu(message)
 
 
-@delayed_menu_router.message_handler(state=States.delayed_change)
+@delayed_menu_router.message(state=States.delayed_change)
 async def get_delayed_id(message: types.Message):
     global delayed_id
     await States.delayed_change_date.set()
@@ -54,7 +56,7 @@ async def get_delayed_id(message: types.Message):
     )
 
 
-@delayed_menu_router.message_handler(state=States.delayed_change_date)
+@delayed_menu_router.message(state=States.delayed_change_date)
 async def change_post_delayed_time(message: types.Message):
     data = {
         "job_id": delayed_id,
@@ -68,7 +70,7 @@ async def change_post_delayed_time(message: types.Message):
     await delayed_menu(message)
 
 
-@delayed_menu_router.message_handler(state=States.delayed_delete)
+@delayed_menu_router.message(state=States.delayed_delete)
 async def delete_delayed_post(message: types.Message, state: FSMContext):
     delayed_id = message.text
     scheduler_app.delete_job(delayed_id, scheduler)

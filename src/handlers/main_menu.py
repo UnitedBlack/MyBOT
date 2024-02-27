@@ -1,49 +1,59 @@
-from aiogram import types, Router
-from aiogram.filters import CommandStart
+from aiogram import types, Router, F
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 main_menu_router = Router()
 
+# @main_menu_attrs_router.message(Filters.text("Запостить") & Filters.state(States.custom_post_menu))
 
-@main_menu_router.message_handler(regexp="^Назад$", state="*")
-async def main_menu(message: types.Message):
-    try:
-        bd_count_text = f"В бд ВБ {hbold(scrapy.count_of_products_in_db())} товаров"
-        tgbd_count_text = f"В бд ТГ {hbold(scrapy.count_of_products_in_tgdb())} постов"
-        delay_count_text = (
-            f"Постов в отложке {hbold(len(scheduler_app.get_delayed_posts(scheduler)))}"
-        )
+
+@main_menu_attrs_router.message(regexp="^Листать посты$", state="*")
+async def select_posts(message: types.Message):
+    await States.sender.set()
+    # scrapy.wbparse()
+    await message.reply("Высылаю посты", reply_markup=get_second_kb())
+    await sender(message=message)
+
+
+@main_menu_attrs_router.message(regexp="^Отложка$", state="*")
+async def delayed_menu(message: types.Message):
+    await States.delayed_menu.set()
+    delayed_post = scheduler_app.get_delayed_posts(scheduler)
+    if delayed_post:
+        delayed_posts = ""
+        for delayed in delayed_post:
+            jobname = delayed["jobname"]
+            jobtime = delayed["jobtime"]
+            jobid = delayed["job_id"]
+            delayed_posts += f"{jobname}\n{jobtime}\n{hcode(jobid)}\n{'='*32}\n"
+
         await bot.send_message(
             admin_id,
-            text=f"{hbold('Главное меню')}\n{bd_count_text}\n{tgbd_count_text}\n{delay_count_text}\n{scrapy.get_weather()}",
-            reply_markup=get_main_kb(),
+            text=delayed_posts,
             parse_mode="HTML",
+            reply_markup=get_third_kb(),
         )
-    except NameError:
-        await start_point(message)
-
-@main_menu_router.message(
-    regexp="^Категории|Одежда тпшкам|Для дома|Бижутерия$", state="*"
-)
-async def state_router(message: types.Message):
-    global skidka_link, scheduler, chat_id, wb_table_name, tg_table_name
-    config = categories_config.get(message.text)
-    if config:
-        skidka_link = config["skidka_link"]
-        wb_table_name = config["wb_table_name"]
-        tg_table_name = config["tg_table_name"]
-        scheduler = config["scheduler"]
-        chat_id = config["chat_id"]
-
-        get_scrapy()
-        await main_menu(message)
-    elif message.text == "Категории":
-        await start_point(message)
-    else:
-        await bot.send_message(admin_id, "Не работает")
+    elif delayed_post == []:
+        await bot.send_message(
+            admin_id, text="Отложка пустая", reply_markup=get_third_kb()
+        )
 
 
-@main_menu_router.message_handler(commands=["start"])
-async def start_point(message: types.Message):
+@main_menu_attrs_router.message(regexp="^Парсер$", state="*")
+async def ask_for_parser(message: types.Message):
+    message_text = f"Вызываю парсер?\nСейчас в базе данных {scrapy.count_of_products_in_db()} товаров"
+    await bot.send_message(admin_id, text=message_text, reply_markup=get_parser_kb())
+    await States.parser.set()
+
+
+@main_menu_attrs_router.message(regexp="^Вызвать парсер$", state=States.parser, run_task=True)
+async def call_parser(message: types.Message, state: FSMContext):
     await bot.send_message(
-        chat_id=admin_id, text="Выберите категорию (канал)", reply_markup=get_start_kb()
+        admin_id,
+        text="Вызвал, подождите пару минут.",
     )
+    posts_num = await main(skidka_link, table_name=wb_table_name)
+    await bot.send_message(admin_id, text=f"Сделано, число постов: {posts_num}")
+    await main_menu(message)
+    await state.finish()

@@ -1,9 +1,11 @@
-from aiogram import types, Router
-from aiogram.filters import CommandStart
+from aiogram import types, Router, F
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 dayvinchik_router = Router()
 
-@dayvinchik_router.message_handler(state=States.sender)
+@dayvinchik_router.message(state=States.sender)
 async def sender(message: types.Message):
     global post_url, pic_url, post_text
     try:
@@ -30,7 +32,7 @@ async def sender(message: types.Message):
     return
 
 
-@dayvinchik_router.message_handler(
+@dayvinchik_router.message(
     regexp="^[Зз]апостить|[Сс]кип$",
     state=States.wait_state,
 )

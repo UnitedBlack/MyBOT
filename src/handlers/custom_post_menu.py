@@ -1,10 +1,12 @@
-from aiogram import types, Router
-from aiogram.filters import CommandStart
+from aiogram import types, Router, F
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 custom_post_menu_router = Router()
 
 
-@custom_post_menu_router.message_handler(regexp="^Запостить$", state=States.custom_post_menu)
+@custom_post_menu_router.message(regexp="^Запостить$", state=States.custom_post_menu)
 async def delay_custom_post(message: types.Message):
     custom_time = (
         calendar_hour,
@@ -25,7 +27,7 @@ async def delay_custom_post(message: types.Message):
     await delayed_menu(message)
 
 
-@custom_post_menu_router.message_handler(state=States.edit_description)
+@custom_post_menu_router.message(state=States.edit_description)
 async def edit_description(message: types.Message):
     await States.custom_post_menu.set()
     global post_text
@@ -36,7 +38,7 @@ async def edit_description(message: types.Message):
     await bot.send_media_group(chat_id=admin_id, media=pictures)
 
 
-@custom_post_menu_router.message_handler(regexp="^Редактировать описание$", state=States.custom_post_menu)
+@custom_post_menu_router.message(regexp="^Редактировать описание$", state=States.custom_post_menu)
 async def ask_edit_description(message: types.Message):
     await bot.send_message(
         admin_id,
@@ -46,12 +48,12 @@ async def ask_edit_description(message: types.Message):
     await States.edit_description.set()
 
 
-@custom_post_menu_router.message_handler(regexp="^Выйти без сохранения$", state="*")
+@custom_post_menu_router.message(regexp="^Выйти без сохранения$", state="*")
 async def exit_without_saving(message: types.Message):
     await delayed_menu(message)
 
 
-@custom_post_menu_router.message_handler(content_types=["photo"], state=States.edit_picture)
+@custom_post_menu_router.message(content_types=["photo"], state=States.edit_picture)
 async def edit_picture(message: types.Message):
     await bot.send_message(
         admin_id, "Сохранил. Ещё одну?", reply_markup=get_photo_editor_kb()
@@ -60,7 +62,7 @@ async def edit_picture(message: types.Message):
     user_pics.append(user_pic)  # Store the photo
 
 
-@custom_post_menu_router.message_handler(state=States.edit_picture)
+@custom_post_menu_router.message(state=States.edit_picture)
 async def process_pictures(message: types.Message):
     if message.text == "Закончить":
         global pictures
@@ -78,7 +80,7 @@ async def process_pictures(message: types.Message):
         ...
 
 
-@custom_post_menu_router.message_handler(regexp="^Редактировать фото$", state=States.custom_post_menu)
+@custom_post_menu_router.message(regexp="^Редактировать фото$", state=States.custom_post_menu)
 async def ask_edit_picture(message: types.Message):
     await States.edit_picture.set()
     await bot.send_message(
@@ -89,7 +91,7 @@ async def ask_edit_picture(message: types.Message):
     await bot.send_media_group(chat_id=admin_id, media=pictures)
 
 
-@custom_post_menu_router.message_handler(state=States.custom_post_link)
+@custom_post_menu_router.message(state=States.custom_post_link)
 async def create_custom_post(message: types.Message):
     global post_text, pics, custom_data
     user_link = [message.text]
