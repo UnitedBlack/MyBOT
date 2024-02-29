@@ -31,7 +31,7 @@ class Products(Base):
     color = Column(String(150))
 
 
-class Posts:
+class Posts(Base):
     __tablename__ = "post"
 
     id = Column(Integer, primary_key=True, index=True, nullable=False)
