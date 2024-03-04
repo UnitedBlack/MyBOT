@@ -2,11 +2,19 @@ from aiogram import types, Router, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from filters.admin_filter import IsAdmin
+import scheduler_app
 
 dayvinchik_router = Router()
+dayvinchik_router.message.filter(IsAdmin())
 
-@dayvinchik_router.message(state=States.sender)
-async def sender(message: types.Message):
+class DayvicnikStates(StatesGroup):
+    sender = State()
+    wait = State()
+
+
+@dayvinchik_router.message(StateFilter(DayvicnikStates.sender))
+async def sender(message: types.Message, state: FSMContext):
     global post_url, pic_url, post_text
     try:
         post_text, pic_url, post_url = scrapy.prepare_posts()
@@ -24,7 +32,7 @@ async def sender(message: types.Message):
     except ValueError as e:
         post_text, pic_url, post_url = scrapy.prepare_posts()
         print(e)
-    await States.wait_state.set()
+    await state.set_state(DayvicnikStates.wait)
     global pictures
     pictures = [InputMediaPhoto(media=pic, parse_mode="HTML") for pic in pic_url]
     pictures[0].caption = post_text
@@ -32,11 +40,9 @@ async def sender(message: types.Message):
     return
 
 
-@dayvinchik_router.message(
-    regexp="^[Зз]апостить|[Сс]кип$",
-    state=States.wait_state,
-)
-async def post_or_skip(message: types.Message):
+@dayvinchik_router.message(F.text == "Запостить", StatesGroup(DayvicnikStates.wait))
+@dayvinchik_router.message(F.text == "Скип", StatesGroup(DayvicnikStates.wait))
+async def post_or_skip(message: types.Message, state: FSMContext):
     try:
         user_message = message.text.lower()
     except AttributeError:

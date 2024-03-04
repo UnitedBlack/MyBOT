@@ -1,8 +1,10 @@
 from aiogram import types, Router
 from aiogram.filters import CommandStart
 
-callback_handler_router = Router()
+from filters.admin_filter import IsAdmin
 
+callback_handler_router = Router()
+callback_handler_router.message.filter(IsAdmin())
 
 async def send_calendar_inline_kb():
     year, month = datetime.now().year, datetime.now().month
@@ -14,7 +16,6 @@ async def send_calendar_inline_kb():
             month,
         ),
     )
-
 
 
 @callback_handler_router.callback_query(

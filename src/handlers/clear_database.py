@@ -3,8 +3,10 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-clear_database_router = Router()
+from filters.admin_filter import IsAdmin
 
+clear_database_router = Router()
+clear_database_router.message.filter(IsAdmin())
 
 class ClearDatabase(StatesGroup):
     clear_database = State()

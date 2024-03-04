@@ -1,23 +1,34 @@
 from aiogram import types, Router, F
 from aiogram.filters import StateFilter
+from aiogram.utils.markdown import hcode
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from filters.admin_filter import IsAdmin
+from start_menu import StartMenuStates
+import scheduler_app
 
 main_menu_router = Router()
+main_menu_router.message.filter(IsAdmin())
 
-# @main_menu_attrs_router.message(Filters.text("Запостить") & Filters.state(States.custom_post_menu))
+class MainMenuStates(StatesGroup):
+    sender = StatesGroup()
+    delayed_menu = StatesGroup()
+    parser = StatesGroup()
 
 
-@main_menu_attrs_router.message(regexp="^Листать посты$", state="*")
-async def select_posts(message: types.Message):
-    await States.sender.set()
+# @main_menu_router.message(Filters.text("Запостить") & Filters.state(States.custom_post_menu))
+
+
+@main_menu_router.message(F.text == "Листать посты", StateFilter("*"))
+async def select_posts(message: types.Message, state: FSMContext):
+    await state.set_state(StartMenuStates.start)
     # scrapy.wbparse()
     await message.reply("Высылаю посты", reply_markup=get_second_kb())
     await sender(message=message)
 
 
-@main_menu_attrs_router.message(regexp="^Отложка$", state="*")
-async def delayed_menu(message: types.Message):
+@main_menu_router.message(F.text == "Отложка", StateFilter("*"))
+async def delayed_menu(message: types.Message, state: FSMContext):
     await States.delayed_menu.set()
     delayed_post = scheduler_app.get_delayed_posts(scheduler)
     if delayed_post:
@@ -40,14 +51,16 @@ async def delayed_menu(message: types.Message):
         )
 
 
-@main_menu_attrs_router.message(regexp="^Парсер$", state="*")
-async def ask_for_parser(message: types.Message):
+@main_menu_router.message(F.text == "Парсер", StateFilter("*"))
+async def ask_for_parser(message: types.Message, state: FSMContext):
     message_text = f"Вызываю парсер?\nСейчас в базе данных {scrapy.count_of_products_in_db()} товаров"
     await bot.send_message(admin_id, text=message_text, reply_markup=get_parser_kb())
     await States.parser.set()
 
 
-@main_menu_attrs_router.message(regexp="^Вызвать парсер$", state=States.parser, run_task=True)
+@main_menu_router.message(
+    F.text == "Вызвать парсер", StateFilter(MainMenuStates.parser), run_task=True
+)
 async def call_parser(message: types.Message, state: FSMContext):
     await bot.send_message(
         admin_id,

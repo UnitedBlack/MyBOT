@@ -3,8 +3,10 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-delayed_menu_router = Router()
+from filters.admin_filter import IsAdmin
 
+delayed_menu_router = Router()
+delayed_menu_router.message.filter(IsAdmin())
 
 @delayed_menu_router.message(
     regexp="^Удалить пост|Изменить время|Кастомный пост|Очистить всю отложку$",

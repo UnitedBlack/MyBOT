@@ -3,8 +3,10 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-custom_post_menu_router = Router()
+from filters.admin_filter import IsAdmin
 
+custom_post_menu_router = Router()
+custom_post_menu_router.message.filter(IsAdmin())
 
 @custom_post_menu_router.message(regexp="^Запостить$", state=States.custom_post_menu)
 async def delay_custom_post(message: types.Message):
