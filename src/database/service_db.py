@@ -46,8 +46,8 @@ async def get_all_posts(
 async def update_post_status(
     db_session: AsyncSession,
     table: Union[Posts, Products],
-    status,
-    id,
+    id: str,
+    status: str,
 ) -> None:
     query = update(table).filter(table.wb_id == id).values(status=status)
     await db_session.execute(query)

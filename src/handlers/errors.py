@@ -1,4 +1,4 @@
-from preknown_errors import *
+from old.preknown_errors import *
 from aiogram import types, Router
 
 error_handler_router = Router()

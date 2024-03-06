@@ -5,8 +5,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from filters.admin_filter import IsAdmin
 from start_menu import StartMenuStates
-import scheduler_app
-from keyboards.inline import get_keyboard
+import old.scheduler_app as scheduler_app
+from keyboards.reply import get_keyboard
 from database import service_db
 from delayed_menu import DelayedMenuStates
 

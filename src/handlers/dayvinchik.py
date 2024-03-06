@@ -1,12 +1,17 @@
 from aiogram import types, Router, F
+from aiogram.types import InputMediaPhoto
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from filters.admin_filter import IsAdmin
-import scheduler_app
+
+from start_menu import StartMenuStates, main_menu
+from database import service_db
+import old.scheduler_app as scheduler_app
 
 dayvinchik_router = Router()
 dayvinchik_router.message.filter(IsAdmin())
+
 
 class DayvicnikStates(StatesGroup):
     sender = State()
@@ -19,14 +24,13 @@ async def sender(message: types.Message, state: FSMContext):
     try:
         post_text, pic_url, post_url = scrapy.prepare_posts()
     except TypeError as e:
-        if scrapy.count_of_products_in_db() < 1:
-            await bot.send_message(admin_id, "БД с товарами пустая")
-        elif scrapy.count_of_products_in_db == scrapy.count_of_products_in_tgdb:
-            await bot.send_message(admin_id, "Закончились товары")
+        if len(service_db.get_all_products()) < 1:
+            await message.answer("БД с товарами пустая")
+        elif len(service_db.get_all_products) == len(service_db.get_all_posts):
+            await message.answer("Закончились товары")
         else:
-            await bot.send_message(admin_id, "Посты закончились или какая-то ошибка")
-
-        await States.start.set()
+            await message.answer("Посты закончились или какая-то ошибка")
+        await state.set_state(StartMenuStates.start)
         await main_menu(message)
         return
     except ValueError as e:
@@ -36,7 +40,7 @@ async def sender(message: types.Message, state: FSMContext):
     global pictures
     pictures = [InputMediaPhoto(media=pic, parse_mode="HTML") for pic in pic_url]
     pictures[0].caption = post_text
-    await bot.send_media_group(chat_id=admin_id, media=pictures)
+    await message.answer_media_group(media=pictures)
     return
 
 
@@ -47,12 +51,12 @@ async def post_or_skip(message: types.Message, state: FSMContext):
         user_message = message.text.lower()
     except AttributeError:
         user_message = "скип"
-    await States.sender.set()
+    await state.set_state(DayvicnikStates.sender)
     if user_message == "запостить":
         delay_data = {"post_text": post_text, "post_pic": pic_url, "chat_id": chat_id}
         scheduler_app.schedule_post(delay_data, scheduler)
-        scrapy.append_data_to_db(post_url, "Liked")
+        service_db.update_post_status(id=post_url, status="Liked")
         await sender(message=message)
     elif user_message == "скип":
-        scrapy.append_data_to_db(post_url, "Disliked")
+        service_db.update_post_status(id=post_url, status="Disliked")
         await sender(message=message)

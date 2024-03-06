@@ -6,9 +6,9 @@ from aiogram.utils.markdown import hbold
 from prikol.weather import get_weather
 from filters.admin_filter import IsAdmin
 from database import service_db
-import scheduler_app
+import old.scheduler_app as scheduler_app
 from config import categories
-from keyboards.inline import get_keyboard
+from keyboards.reply import get_keyboard
 
 start_menu_router = Router()
 start_menu_router.message.filter(IsAdmin())
