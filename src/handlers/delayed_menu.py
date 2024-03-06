@@ -3,10 +3,11 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from datetime import datetime
-from custom_post_menu import CustomPostMenuState
+from future.custom_post_menu import CustomPostMenuState
 from keyboards.reply import get_keyboard
 import old.scheduler_app as scheduler_app
 from filters.admin_filter import IsAdmin
+from main_menu import delayed_menu
 
 delayed_menu_router = Router()
 delayed_menu_router.message.filter(IsAdmin())

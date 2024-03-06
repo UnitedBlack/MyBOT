@@ -53,10 +53,11 @@ async def post_or_skip(message: types.Message, state: FSMContext):
         user_message = "скип"
     await state.set_state(DayvicnikStates.sender)
     if user_message == "запостить":
-        delay_data = {"post_text": post_text, "post_pic": pic_url, "chat_id": chat_id}
+        delay_data = {"post_text": post_text, "post_pic": pic_url, "chat_id": chat_id} # chat_id = group_id
         scheduler_app.schedule_post(delay_data, scheduler)
         service_db.update_post_status(id=post_url, status="Liked")
         await sender(message=message)
     elif user_message == "скип":
         service_db.update_post_status(id=post_url, status="Disliked")
         await sender(message=message)
+
