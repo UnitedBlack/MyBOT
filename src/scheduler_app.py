@@ -1,14 +1,16 @@
-import telebot
+import telebot, os
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime
 from telebot import types
 from random import randint
-from configure_bot import TOKEN
 from apscheduler.schedulers.background import BackgroundScheduler
-from configure_bot import jobstores_tp
-import calendar
 
-bot = telebot.TeleBot(TOKEN)
+# from configure_bot import jobstores_tp
+import calendar
+from dotenv import find_dotenv, load_dotenv
+
+
+bot = telebot.TeleBot(os.getenv("TOKEN"))
 time_h = int(datetime.now().strftime("%H"))
 
 

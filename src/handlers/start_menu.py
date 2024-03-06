@@ -8,6 +8,7 @@ from filters.admin_filter import IsAdmin
 from database import service_db
 import scheduler_app
 from config import categories
+from keyboards.inline import get_keyboard
 
 start_menu_router = Router()
 start_menu_router.message.filter(IsAdmin())
@@ -20,17 +21,22 @@ class StartMenuStates(StatesGroup):
 @start_menu_router.message(StateFilter("*"), F.text == "Назад")
 async def main_menu(message: types.Message):
     try:
-        bd_count_text = f"В бд ВБ {hbold(service_db.count_of_products_in_db())} товаров"
-        tgbd_count_text = (
-            f"В бд ТГ {hbold(service_db.count_of_products_in_tgdb())} постов"
-        )
+        bd_count_text = f"В бд ВБ {hbold(len(service_db.get_all_products()))} товаров"
+        tgbd_count_text = f"В бд ТГ {hbold(len(service_db.get_all_posts()))} постов"
         delay_count_text = (
             f"Постов в отложке {hbold(len(scheduler_app.get_delayed_posts(scheduler)))}"
         )
-        await bot.send_message(
-            admin_id,
+        await message.answer(
             text=f"{hbold('Главное меню')}\n{bd_count_text}\n{tgbd_count_text}\n{delay_count_text}\n{get_weather()}",
-            reply_markup=get_main_kb(),
+            reply_markup=get_keyboard(
+                "Листать посты",
+                "Отложка",
+                "Парсер",
+                "Очистка БД",
+                "Категории",
+                placeholder="Главное меню",
+                sizes=(2, 2, 1),
+            ),
             parse_mode="HTML",
         )
     except NameError:
@@ -49,16 +55,25 @@ async def state_router(message: types.Message):
         wb_table_name = config["wb_table_name"]
         tg_table_name = config["tg_table_name"]
         scheduler = config["scheduler"]
-        chat_id = config["chat_id"]
 
-        get_scrapy()
+        # get_scrapy()
         await main_menu(message)
     elif message.text == "Категории":
         await start_point(message)
     else:
-        await bot.send_message(admin_id, "Не работает")
+        await message.answer("Не работает")
 
 
 @start_menu_router.message(CommandStart)
 async def start_point(message: types.Message):
-    await message.answer(text="Выберите категорию (канал)", reply_markup=get_start_kb())
+    await message.answer(
+        text="Выберите категорию",
+        reply_markup=get_keyboard(
+            "Одежда тпшкам",
+            "Для дома",
+            "Бижутерия",
+            "Косметика",
+            placeholder="Категория",
+            sizes=(2, 2),
+        ),
+    )

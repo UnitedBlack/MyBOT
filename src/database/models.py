@@ -20,6 +20,7 @@ class Products(Base):
         unique=True,
         nullable=False,
     )
+    group = Column(String(150))
     name = Column(String(150))
     discount_price = Column(Integer)
     price = Column(Integer)
@@ -40,4 +41,5 @@ class Posts(Base):
         unique=True,
         nullable=False,
     )
+    group = Column(String(150))
     status = Column(String(150))

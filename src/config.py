@@ -1,4 +1,5 @@
 import os
+from database.models import Products, Posts
 
 DB_TYPE = os.getenv("DB_TYPE")
 DB_USER = os.getenv("DB_USER")

@@ -6,13 +6,16 @@ from aiogram.fsm.state import State, StatesGroup
 from filters.admin_filter import IsAdmin
 from start_menu import StartMenuStates
 import scheduler_app
+from keyboards.inline import get_keyboard
+from database import service_db
+from delayed_menu import DelayedMenuStates
 
 main_menu_router = Router()
 main_menu_router.message.filter(IsAdmin())
 
+
 class MainMenuStates(StatesGroup):
     sender = StatesGroup()
-    delayed_menu = StatesGroup()
     parser = StatesGroup()
 
 
@@ -23,13 +26,26 @@ class MainMenuStates(StatesGroup):
 async def select_posts(message: types.Message, state: FSMContext):
     await state.set_state(StartMenuStates.start)
     # scrapy.wbparse()
-    await message.reply("Высылаю посты", reply_markup=get_second_kb())
+    await message.reply(
+        "Высылаю посты",
+        reply_markup=get_keyboard(
+            "Запостить", "Скип", "Назад", placeholder="Действие", sizes=(3,)
+        ),
+    )
     await sender(message=message)
 
 
 @main_menu_router.message(F.text == "Отложка", StateFilter("*"))
 async def delayed_menu(message: types.Message, state: FSMContext):
-    await States.delayed_menu.set()
+    delayed_menu_keyboard = get_keyboard(
+        "Изменить время",
+        "Удалить пост",
+        "Кастомный пост",
+        "Очистить всю отложку",
+        "Назад",
+        sizes=(2, 2, 1),
+    )
+    await state.set_state(DelayedMenuStates.delayed_menu)
     delayed_post = scheduler_app.get_delayed_posts(scheduler)
     if delayed_post:
         delayed_posts = ""
@@ -39,34 +55,29 @@ async def delayed_menu(message: types.Message, state: FSMContext):
             jobid = delayed["job_id"]
             delayed_posts += f"{jobname}\n{jobtime}\n{hcode(jobid)}\n{'='*32}\n"
 
-        await bot.send_message(
-            admin_id,
-            text=delayed_posts,
-            parse_mode="HTML",
-            reply_markup=get_third_kb(),
+        await message.answer(
+            text=delayed_posts, parse_mode="HTML", reply_markup=delayed_menu_keyboard
         )
     elif delayed_post == []:
-        await bot.send_message(
-            admin_id, text="Отложка пустая", reply_markup=get_third_kb()
-        )
+        await message.answer(text="Отложка пустая", reply_markup=delayed_menu_keyboard)
 
 
 @main_menu_router.message(F.text == "Парсер", StateFilter("*"))
 async def ask_for_parser(message: types.Message, state: FSMContext):
-    message_text = f"Вызываю парсер?\nСейчас в базе данных {scrapy.count_of_products_in_db()} товаров"
-    await bot.send_message(admin_id, text=message_text, reply_markup=get_parser_kb())
-    await States.parser.set()
+
+    message_text = f"Вызываю парсер?\nСейчас в базе данных {len(service_db.get_all_products())} товаров"
+    await message.answer(
+        message_text, reply_markup=get_keyboard("Вызвать парсер", "Назад")
+    )
+    await state.set_state(MainMenuStates.parser)
 
 
 @main_menu_router.message(
     F.text == "Вызвать парсер", StateFilter(MainMenuStates.parser), run_task=True
 )
 async def call_parser(message: types.Message, state: FSMContext):
-    await bot.send_message(
-        admin_id,
-        text="Вызвал, подождите пару минут.",
-    )
+    await message.answer(text="Вызвал, подождите пару минут.")
     posts_num = await main(skidka_link, table_name=wb_table_name)
-    await bot.send_message(admin_id, text=f"Сделано, число постов: {posts_num}")
+    await message.answer(text=f"Сделано, число постов: {posts_num}")
     await main_menu(message)
-    await state.finish()
+    await state.finish() # Вроде set state none

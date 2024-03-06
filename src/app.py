@@ -4,45 +4,47 @@ from aiogram import Bot, Dispatcher
 from dotenv import find_dotenv, load_dotenv
 
 from handlers.start_menu import start_menu_router
-from handlers.main_menu import main_menu_router
-from handlers.callbacks import callback_handler_router
-from handlers.clear_database import clear_database_router
-from handlers.custom_post_menu import custom_post_menu_router
-from handlers.dayvinchik import dayvinchik_router
-from handlers.delayed_menu import delayed_menu_router
-from handlers.errors import error_handler_router
+
+# from handlers.main_menu import main_menu_router
+# from handlers.callbacks import callback_handler_router
+# from handlers.clear_database import clear_database_router
+# from handlers.custom_post_menu import custom_post_menu_router
+# from handlers.dayvinchik import dayvinchik_router
+# from handlers.delayed_menu import delayed_menu_router
+# from handlers.errors import error_handler_router
 
 from middlewares.db import DatabaseSession
 
 from database.engine import create_db, session_maker
 
-find_dotenv(load_dotenv())
+load_dotenv(find_dotenv())
 
 ALLOWED_UPDATES = []
 
 bot = Bot(token=os.getenv("TOKEN"))
-bot.admins_list = ["333253716", "5049131938"]
+bot.admins_list = [333253716, 5049131938]
 
 dp = Dispatcher()
 
 dp.include_routers(
-    main_menu_router,
-    callback_handler_router,
-    clear_database_router,
-    custom_post_menu_router,
-    dayvinchik_router,
-    delayed_menu_router,
+    # main_menu_router,
+    # callback_handler_router,
+    # clear_database_router,
+    # custom_post_menu_router,
+    # dayvinchik_router,
+    # delayed_menu_router,
     start_menu_router,
-    error_handler_router,
+    # error_handler_router,
 )
 
 
 async def on_startup(bot):
     await create_db()
+    print("Ready")
 
 
 async def on_shutdown(bot):
-    pass
+    print("Shut down")
 
 
 async def main():

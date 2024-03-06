@@ -8,6 +8,9 @@ from filters.admin_filter import IsAdmin
 custom_post_menu_router = Router()
 custom_post_menu_router.message.filter(IsAdmin())
 
+class CustomPostMenuState(StatesGroup):
+    custom_post = State()
+
 @custom_post_menu_router.message(regexp="^Запостить$", state=States.custom_post_menu)
 async def delay_custom_post(message: types.Message):
     custom_time = (

@@ -1,8 +1,8 @@
 import os, asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from models import Base
-from db_config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER, DB_TYPE
+from .models import Base
+from .db_config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER, DB_TYPE
 
 database_url = f"{DB_TYPE}+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 

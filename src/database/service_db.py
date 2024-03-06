@@ -1,4 +1,4 @@
-from models import Products, Posts
+from .models import Products, Posts
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from typing import Union, Any, Literal
