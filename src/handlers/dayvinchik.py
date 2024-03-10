@@ -56,8 +56,10 @@ async def post_or_skip(message: types.Message, state: FSMContext):
         delay_data = {"post_text": post_text, "post_pic": pic_url, "chat_id": chat_id} # chat_id = group_id
         scheduler_app.schedule_post(delay_data, scheduler)
         service_db.update_post_status(id=post_url, status="Liked")
+        # append_data_to_db
         await sender(message=message)
     elif user_message == "скип":
+        # не обязательно update_post_status, мб add post а или хз
         service_db.update_post_status(id=post_url, status="Disliked")
+        # scrapy.append_data_to_db(post_url, "Disliked")
         await sender(message=message)
-
