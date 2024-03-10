@@ -8,14 +8,15 @@ from filters.admin_filter import IsAdmin
 clear_database_router = Router()
 clear_database_router.message.filter(IsAdmin())
 
+
 class ClearDatabase(StatesGroup):
     clear_database = State()
 
 
 @clear_database_router.message(StateFilter("*"), F.text == "Очистка БД")
 async def clear_db(message: types.Message, state: FSMContext):
-    await bot.send_message(
-        admin_id, text="Какую бд хотите очистить?", reply_markup=get_clear_db_kb()
+    await message.answer(
+        text="Какую бд хотите очистить?", reply_markup=get_clear_db_kb()
     )
     await state.set_state(ClearDatabase.clear_database)
 

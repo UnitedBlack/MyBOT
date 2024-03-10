@@ -1,4 +1,4 @@
-import formatter_app
+import old.formatter_app as formatter_app
 import src.scheduler_app as scheduler_app
 import old.custom_scraper as custom_scraper
 import logging
@@ -13,7 +13,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram import types
 from aiogram.types import InputMediaPhoto
-from keyboards import (
+from old.keyboards import (
     get_clear_db_kb,
     get_main_kb,
     get_parser_kb,
@@ -35,7 +35,7 @@ from configure_bot import (
     categories_config,
 )
 from pprint import pprint
-from preknown_errors import *
+from old.preknown_errors import *
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
