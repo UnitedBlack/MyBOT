@@ -4,6 +4,7 @@ from aiogram.utils.markdown import hcode
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from filters.admin_filter import IsAdmin
+from handlers.dayvinchik import sender
 from start_menu import StartMenuStates
 import old.scheduler_app as scheduler_app
 from keyboards.reply import get_keyboard

@@ -2,7 +2,8 @@ from aiogram import types, Router, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-
+from keyboards.reply import get_keyboard
+from database import service_db
 from filters.admin_filter import IsAdmin
 
 clear_database_router = Router()
@@ -16,7 +17,10 @@ class ClearDatabase(StatesGroup):
 @clear_database_router.message(StateFilter("*"), F.text == "Очистка БД")
 async def clear_db(message: types.Message, state: FSMContext):
     await message.answer(
-        text="Какую бд хотите очистить?", reply_markup=get_clear_db_kb()
+        text="Какую бд хотите очистить?",
+        reply_markup=get_keyboard(
+            "Очистить ВБ БД", "Очистить ТГ БД", "Назад", sizes=(3)
+        ),
     )
     await state.set_state(ClearDatabase.clear_database)
 
@@ -25,7 +29,8 @@ async def clear_db(message: types.Message, state: FSMContext):
     StateFilter(ClearDatabase.clear_database), F.text == "Очистить ВБ БД"
 )
 async def clear_wb(message: types.Message, state: FSMContext):
-    products_sql.delete_all_records(wb_table_name)
+    service_db.delete_all_records()
+    # products_sql.delete_all_records(wb_table_name)
     await message.reply("Очистил")
     get_scrapy()
 
@@ -35,6 +40,7 @@ async def clear_wb(message: types.Message, state: FSMContext):
     F.text == "Очистить ТГ БД",
 )
 async def clear_tg(message: types.Message, state: FSMContext):
-    posts_sql.delete_all_records(tg_table_name)
+    service_db.delete_all_records()
+    # posts_sql.delete_all_records(tg_table_name)
     await message.reply("Очистил")
     get_scrapy()

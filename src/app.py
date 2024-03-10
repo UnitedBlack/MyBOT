@@ -1,7 +1,7 @@
 import asyncio
 import os
 from aiogram import Bot, Dispatcher
-from dotenv import find_dotenv, load_dotenv
+from config import TOKEN
 
 from handlers.start_menu import start_menu_router
 
@@ -17,11 +17,9 @@ from middlewares.db import DatabaseSession
 
 from database.engine import create_db, session_maker
 
-load_dotenv(find_dotenv())
-
 ALLOWED_UPDATES = []
 
-bot = Bot(token=os.getenv("TOKEN"))
+bot = Bot(token=TOKEN)
 bot.admins_list = [333253716, 5049131938]
 
 dp = Dispatcher()

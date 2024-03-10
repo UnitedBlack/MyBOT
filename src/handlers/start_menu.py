@@ -1,12 +1,12 @@
+import scheduler_app
 from aiogram import types, Router, F
 from aiogram.filters import StateFilter, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.markdown import hbold
-from prikol.weather import get_weather
+from logic.prikol.weather import get_weather
 from filters.admin_filter import IsAdmin
 from database import service_db
-import old.scheduler_app as scheduler_app
 from config import categories
 from keyboards.reply import get_keyboard
 
