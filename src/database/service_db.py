@@ -18,8 +18,8 @@ from sqlalchemy.exc import IntegrityError
 
 async def add_post(
     db_session: AsyncSession,
-    table: Union[Posts, Products],
     data: dict[Any],
+    table: Union[Posts, Products] = Posts,
 ) -> Any:
     try:
         obj = table(**data)
@@ -35,7 +35,7 @@ async def add_post(
 
 async def get_all_posts(
     db_session: AsyncSession,
-    table: Union[Posts, Products],
+    table: Union[Posts, Products] = Posts,
 ) -> list:
     query = db_session.select(table.wb_id)
     result = await db_session.execute(query)
@@ -45,9 +45,9 @@ async def get_all_posts(
 
 async def update_post_status(
     db_session: AsyncSession,
-    table: Union[Posts, Products],
     id: str,
     status: str,
+    table: Union[Posts, Products] = Posts,
 ) -> None:
     query = update(table).filter(table.wb_id == id).values(status=status)
     await db_session.execute(query)
@@ -56,8 +56,8 @@ async def update_post_status(
 
 async def get_post_status(
     db_session: AsyncSession,
-    table: Union[Posts, Products],
     id_to_check,
+    table: Union[Posts, Products] = Posts,
 ) -> Any | Literal[False]:
     query = select(table).filter(table.wb_id == id_to_check)
     result = await db_session.execute(query)
@@ -67,8 +67,8 @@ async def get_post_status(
 
 async def is_post_in_db(
     db_session: AsyncSession,
-    table: Union[Posts, Products],
-    id_to_check,
+    id_to_check,  # str?
+    table: Union[Posts, Products] = Posts,
 ) -> bool:
     query = select(table).where(table.wb_id == id_to_check)
     result = await db_session.execute(query)
@@ -80,7 +80,7 @@ async def is_post_in_db(
 # PRODUCTS
 async def get_all_products(
     db_session: AsyncSession,
-    table: Union[Posts, Products],
+    table: Union[Posts, Products] = Products,
 ) -> list:
     query = select(table)
     result = await db_session.execute(query)
@@ -92,8 +92,8 @@ async def get_all_products(
 
 async def is_product_in_database(
     db_session: AsyncSession,
-    table: Union[Posts, Products],
-    url_to_check,
+    url_to_check,  # str?
+    table: Union[Posts, Products] = Products,
 ) -> bool:
     query = select(table.url).where(table.url == url_to_check)
     result = await db_session.execute(query)
@@ -103,7 +103,7 @@ async def is_product_in_database(
 
 async def delete_all_records(
     db_session: AsyncSession,
-    table: Union[Posts, Products],
+    table: Union[Posts, Products] = Products,
 ) -> None:
     query = delete(table)
     await db_session.execute(query)
