@@ -55,7 +55,7 @@ async def state_router(message: types.Message):
         wb_table_name = config["wb_table_name"]
         tg_table_name = config["tg_table_name"]
         scheduler = config["scheduler"]
-
+        chat_id = config["chat_id"] # chat_id >> tg_group_id
         # get_scrapy()
         await main_menu(message)
     elif message.text == "Категории":
