@@ -7,6 +7,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 TOKEN = os.getenv("TOKEN")
+GOO_SO_TOKEN = os.getenv("GOO_SO_TOKEN")
 
 DB_TYPE = os.getenv("DB_TYPE")
 DB_USER = os.getenv("DB_USER")
@@ -15,7 +16,9 @@ DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 
-jobstores_database_url = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+jobstores_database_url = (
+    f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 jobstores = {"default": SQLAlchemyJobStore(url=jobstores_database_url)}
 scheduler_tp = AsyncIOScheduler(jobstores=jobstores)
@@ -29,20 +32,17 @@ scheduler_home.start()
 categories = {
     "Бижутерия": {
         "skidka_category_link": "",
-        "wb_table_name": "",
-        "tg_table_name": "",
+        "group_name": "",
         "scheduler": scheduler_bijou,
     },
     "Одежда": {
         "skidka_category_link": "",
-        "wb_table_name": "",
-        "tg_table_name": "",
+        "group_name": "",
         "scheduler": scheduler_tp,
     },
     "Для дома": {
         "skidka_category_link": "",
-        "wb_table_name": "",
-        "tg_table_name": "",
+        "group_name": "",
         "scheduler": scheduler_home,
     },
 }

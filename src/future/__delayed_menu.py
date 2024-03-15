@@ -5,9 +5,11 @@ from aiogram.fsm.state import State, StatesGroup
 from datetime import datetime
 from future.custom_post_menu import CustomPostMenuState
 from keyboards.reply import get_keyboard
-import old.scheduler_app as scheduler_app
 from filters.admin_filter import IsAdmin
 from main_menu import delayed_menu
+
+import scheduler_app
+from start_menu import scheduler
 
 delayed_menu_router = Router()
 delayed_menu_router.message.filter(IsAdmin())
@@ -90,7 +92,7 @@ async def change_post_delayed_time(message: types.Message, state: FSMContext):
     await delayed_menu(message)
 
 
-@delayed_menu_router.message(state=States.delayed_delete)
+@delayed_menu_router.message(StateFilter(DelayedMenuStates.delayed_delete))
 async def delete_delayed_post(message: types.Message, state: FSMContext):
     delayed_id = message.text
     scheduler_app.delete_job(delayed_id, scheduler)

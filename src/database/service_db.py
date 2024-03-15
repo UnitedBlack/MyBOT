@@ -1,4 +1,4 @@
-from .models import Products, Posts
+from models import Products, Posts
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from typing import Union, Any, Literal
@@ -35,9 +35,10 @@ async def add_post(
 
 async def get_all_posts(
     db_session: AsyncSession,
+    group_name: str,  # change to data
     table: Union[Posts, Products] = Posts,
 ) -> list:
-    query = db_session.select(table.wb_id)
+    query = db_session.select(table.wb_id).filter(table.group_name == group_name)
     result = await db_session.execute(query)
     wb_ids = [row[0] for row in result.scalars.all()]
     return wb_ids
@@ -47,19 +48,30 @@ async def update_post_status(
     db_session: AsyncSession,
     id: str,
     status: str,
+    group_name: str,
     table: Union[Posts, Products] = Posts,
 ) -> None:
-    query = update(table).filter(table.wb_id == id).values(status=status)
+    query = (
+        update(table)
+        .filter(table.wb_id == id)
+        .filter(table.group_name == group_name)
+        .values(status=status)
+    )
     await db_session.execute(query)
     await db_session.commit()
 
 
 async def get_post_status(
     db_session: AsyncSession,
-    id_to_check,
+    id_to_check: str,
+    group_name: str,
     table: Union[Posts, Products] = Posts,
 ) -> Any | Literal[False]:
-    query = select(table).filter(table.wb_id == id_to_check)
+    query = (
+        select(table)
+        .filter(table.group_name == group_name)
+        .filter(table.wb_id == id_to_check)
+    )
     result = await db_session.execute(query)
     row = result.first()
     return row[0] if row else False
@@ -67,10 +79,15 @@ async def get_post_status(
 
 async def is_post_in_db(
     db_session: AsyncSession,
-    id_to_check,  # str?
+    id_to_check: str,  # str?
+    group_name: str,
     table: Union[Posts, Products] = Posts,
 ) -> bool:
-    query = select(table).where(table.wb_id == id_to_check)
+    query = (
+        select(table)
+        .filter(table.group_name == group_name)
+        .filter(table.wb_id == id_to_check)
+    )
     result = await db_session.execute(query)
     row = result.fetchone()
     return row if row else False
@@ -78,11 +95,29 @@ async def is_post_in_db(
 
 ################################################
 # PRODUCTS
+async def add_product(
+    db_session: AsyncSession,
+    data: dict[Any],
+    table: Union[Posts, Products] = Products,
+) -> Any:
+    try:
+        obj = table(**data)
+        db_session.add(obj)
+        await db_session.commit()
+    except IntegrityError as e:
+        db_session.rollback()
+        raise ValueError("Data Integrity Error Occured") from e
+    except Exception as e:
+        db_session.rollback()
+        raise e
+
+
 async def get_all_products(
     db_session: AsyncSession,
+    group_name: str,
     table: Union[Posts, Products] = Products,
 ) -> list:
-    query = select(table)
+    query = select(table).filter(table.group_name == group_name)
     result = await db_session.execute(query)
     rows = result.fetchall()
     column_names = result.keys()
@@ -92,10 +127,15 @@ async def get_all_products(
 
 async def is_product_in_database(
     db_session: AsyncSession,
-    url_to_check,  # str?
+    url_to_check: str,  # str?
+    group_name: str,
     table: Union[Posts, Products] = Products,
 ) -> bool:
-    query = select(table.url).where(table.url == url_to_check)
+    query = (
+        select(table.url)
+        .filter(table.group_name == group_name)
+        .filter(table.url == url_to_check)
+    )
     result = await db_session.execute(query)
     row = result.fetchone()
     return row is not None
@@ -103,9 +143,10 @@ async def is_product_in_database(
 
 async def delete_all_records(
     db_session: AsyncSession,
+    group_name: str,
     table: Union[Posts, Products] = Products,
 ) -> None:
-    query = delete(table)
+    query = delete(table).filter(table.group_name == group_name)
     await db_session.execute(query)
     await db_session.commit()
 

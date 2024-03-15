@@ -41,13 +41,12 @@ async def on_startup(bot):
     print("Ready")
 
 
-async def on_shutdown(bot):
-    print("Shut down")
+# async def on_shutdown(bot):
+#     print("Shut down")
 
 
 async def main():
     dp.startup.register(on_startup)
-    dp.startup.register(on_shutdown)
     dp.update.middleware(DatabaseSession(session_pool=session_maker))
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)  # allowed_updates = ALLOWED_UPDATES

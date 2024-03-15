@@ -9,7 +9,10 @@ from start_menu import StartMenuStates
 import old.scheduler_app as scheduler_app
 from keyboards.reply import get_keyboard
 from database import service_db
-from delayed_menu import DelayedMenuStates
+from future.__delayed_menu import DelayedMenuStates
+
+from start_menu import scheduler, skidka_link, main_menu
+from logic.scraper import scraper_app
 
 main_menu_router = Router()
 main_menu_router.message.filter(IsAdmin())
@@ -78,7 +81,7 @@ async def ask_for_parser(message: types.Message, state: FSMContext):
 )
 async def call_parser(message: types.Message, state: FSMContext):
     await message.answer(text="Вызвал, подождите пару минут.")
-    posts_num = await main(skidka_link, table_name=wb_table_name)
+    posts_num = scraper_app.start_scraper(...)
     await message.answer(text=f"Сделано, число постов: {posts_num}")
-    await main_menu(message)
     await state.finish() # Вроде set state none
+    await main_menu(message)

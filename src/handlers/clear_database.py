@@ -6,6 +6,8 @@ from keyboards.reply import get_keyboard
 from database import service_db
 from filters.admin_filter import IsAdmin
 
+from database.models import Products, Posts
+
 clear_database_router = Router()
 clear_database_router.message.filter(IsAdmin())
 
@@ -29,10 +31,10 @@ async def clear_db(message: types.Message, state: FSMContext):
     StateFilter(ClearDatabase.clear_database), F.text == "Очистить ВБ БД"
 )
 async def clear_wb(message: types.Message, state: FSMContext):
-    service_db.delete_all_records()
+    service_db.delete_all_records(table=Posts, group_name=...)
     # products_sql.delete_all_records(wb_table_name)
     await message.reply("Очистил")
-    get_scrapy()
+    # get_scrapy()
 
 
 @clear_database_router.message(
@@ -40,7 +42,7 @@ async def clear_wb(message: types.Message, state: FSMContext):
     F.text == "Очистить ТГ БД",
 )
 async def clear_tg(message: types.Message, state: FSMContext):
-    service_db.delete_all_records()
+    service_db.delete_all_records(table=Products, group_name=...)
     # posts_sql.delete_all_records(tg_table_name)
     await message.reply("Очистил")
-    get_scrapy()
+    # get_scrapy()

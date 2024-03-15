@@ -1,7 +1,7 @@
-import telebot, os
+import os
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime
-from telebot import types
+# from telebot import types
 from random import randint
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -10,16 +10,16 @@ import calendar
 from dotenv import find_dotenv, load_dotenv
 
 
-bot = telebot.TeleBot(os.getenv("TOKEN"))
+# bot = telebot.TeleBot(os.getenv("TOKEN"))
 time_h = int(datetime.now().strftime("%H"))
 
 
 def post_job(post):
     chat_id = post["chat_id"]
-    media = [types.InputMediaPhoto(url, parse_mode="HTML") for url in post["post_pic"]]
+    # media = [types.InputMediaPhoto(url, parse_mode="HTML") for url in post["post_pic"]]
     # post["post_pic"]
-    media[0].caption = post["post_text"]
-    bot.send_media_group(chat_id=chat_id, media=media)
+    # media[0].caption = post["post_text"]
+    # bot.send_media_group(chat_id=chat_id, media=media)
 
 
 def schedule_post(data, scheduler, ad=False, custom_time=False):
@@ -148,9 +148,9 @@ def remove_all_jobs(scheduler):
         scheduler.remove_job(job.id)
 
 
-if __name__ == "__main__":
-    schedulerTP = BackgroundScheduler(jobstores=jobstores_tp)
-    schedulerTP.start()
+# if __name__ == "__main__":
+#     schedulerTP = BackgroundScheduler(jobstores=jobstores_tp)
+#     schedulerTP.start()
     # print(get_free_time(schedulerTP))
     # data = {
     #     "post_text": '💯<b>Держатель для туалетной бумаги настенный с полкой</b>\n\n💰Цена: <s>749</s>₽ <b>404</b>₽ (скидка <b>46</b>%)\n\n⭐️<b>Хороший рейтинг</b>: <b>5.0</b>\n\n🌈Цвет: <b>черный</b>\n\n🔗<b>Купить здесь:</b> <a href="https://goo.su/tDZ275">ссылка на товар</a>',
