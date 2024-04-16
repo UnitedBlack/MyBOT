@@ -1,3 +1,4 @@
+import scheduler_app
 from aiogram import types, Router, F
 from aiogram.filters import StateFilter
 from aiogram.utils.markdown import hcode
@@ -5,13 +6,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from filters.admin_filter import IsAdmin
 from handlers.dayvinchik import sender
-from start_menu import StartMenuStates
-import old.scheduler_app as scheduler_app
+from handlers.start_menu import StartMenuStates, scrapy_core, scheduler, skidka_link, main_menu
 from keyboards.reply import get_keyboard
 from database import service_db
 from future.__delayed_menu import DelayedMenuStates
-
-from start_menu import scheduler, skidka_link, main_menu
+from database.models import Products, Posts
 from logic.scraper import scraper_app
 
 main_menu_router = Router()
@@ -68,8 +67,7 @@ async def delayed_menu(message: types.Message, state: FSMContext):
 
 @main_menu_router.message(F.text == "Парсер", StateFilter("*"))
 async def ask_for_parser(message: types.Message, state: FSMContext):
-
-    message_text = f"Вызываю парсер?\nСейчас в базе данных {len(service_db.get_all_products())} товаров"
+    message_text = f"Вызываю парсер?\nСейчас в базе данных {len(scrapy_core.get_data_from_db(Products))} товаров"
     await message.answer(
         message_text, reply_markup=get_keyboard("Вызвать парсер", "Назад")
     )
@@ -81,7 +79,7 @@ async def ask_for_parser(message: types.Message, state: FSMContext):
 )
 async def call_parser(message: types.Message, state: FSMContext):
     await message.answer(text="Вызвал, подождите пару минут.")
-    posts_num = scraper_app.start_scraper(...)
+    posts_num = scraper_app.start_scraper(skidka_link)
     await message.answer(text=f"Сделано, число постов: {posts_num}")
-    await state.finish() # Вроде set state none
+    await state.finish()  # Вроде set state none
     await main_menu(message)

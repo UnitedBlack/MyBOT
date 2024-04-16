@@ -1,6 +1,6 @@
-from models import Products, Posts
+from database.models import Products, Posts
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+from sqlalchemy import update, delete, select
 from typing import Union, Any, Literal
 
 from sqlalchemy.exc import IntegrityError
@@ -38,9 +38,9 @@ async def get_all_posts(
     group_name: str,  # change to data
     table: Union[Posts, Products] = Posts,
 ) -> list:
-    query = db_session.select(table.wb_id).filter(table.group_name == group_name)
+    query = select(table.wb_id).filter(table.group_name == group_name)
     result = await db_session.execute(query)
-    wb_ids = [row[0] for row in result.scalars.all()]
+    wb_ids = [row[0] for row in result.fetchall()]
     return wb_ids
 
 

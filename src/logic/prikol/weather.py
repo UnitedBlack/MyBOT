@@ -1,6 +1,6 @@
 import requests
 
-def get_weather(self, api_key="e8c4e195e035f4befb6d2f044b5cfcc5", city="Москва"):
+def get_weather(api_key="e8c4e195e035f4befb6d2f044b5cfcc5", city="Москва"):
     response = requests.get(
         f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
     )

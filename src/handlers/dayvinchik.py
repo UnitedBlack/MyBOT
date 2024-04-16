@@ -4,10 +4,9 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from filters.admin_filter import IsAdmin
-
-from start_menu import StartMenuStates, main_menu
+from handlers.start_menu import StartMenuStates, main_menu
 from database import service_db
-import old.scheduler_app as scheduler_app
+import scheduler_app 
 
 dayvinchik_router = Router()
 dayvinchik_router.message.filter(IsAdmin())
@@ -44,8 +43,8 @@ async def sender(message: types.Message, state: FSMContext):
     return
 
 
-@dayvinchik_router.message(F.text == "Запостить", StatesGroup(DayvicnikStates.wait))
-@dayvinchik_router.message(F.text == "Скип", StatesGroup(DayvicnikStates.wait))
+@dayvinchik_router.message(F.text == "Запостить", StateFilter(DayvicnikStates.wait))
+@dayvinchik_router.message(F.text == "Скип", StateFilter(DayvicnikStates.wait))
 async def post_or_skip(message: types.Message, state: FSMContext):
     try:
         user_message = message.text.lower()

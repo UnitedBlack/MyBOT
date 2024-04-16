@@ -5,7 +5,7 @@ from config import TOKEN
 
 from handlers.start_menu import start_menu_router
 
-# from handlers.main_menu import main_menu_router
+from handlers.main_menu import main_menu_router
 # from handlers.callbacks import callback_handler_router
 # from handlers.clear_database import clear_database_router
 # from handlers.custom_post_menu import custom_post_menu_router
@@ -25,7 +25,7 @@ bot.admins_list = [333253716, 5049131938]
 dp = Dispatcher()
 
 dp.include_routers(
-    # main_menu_router,
+    main_menu_router,
     # callback_handler_router,
     # clear_database_router,
     # custom_post_menu_router,

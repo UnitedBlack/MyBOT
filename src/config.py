@@ -31,18 +31,21 @@ scheduler_home.start()
 
 categories = {
     "Бижутерия": {
-        "skidka_category_link": "",
-        "group_name": "",
+        "skidka_category_link": "https://skidka7.com/discount/jew/all",
+        "group_name": "Bijou",
+        "tg_group_id": "2051501195",
         "scheduler": scheduler_bijou,
     },
-    "Одежда": {
-        "skidka_category_link": "",
-        "group_name": "",
+    "Одежда тпшкам": {
+        "skidka_category_link": "https://skidka7.com/discount/cwomen/all",
+        "group_name": "Clothes",
+        "tg_group_id": "2041578470",
         "scheduler": scheduler_tp,
     },
     "Для дома": {
-        "skidka_category_link": "",
-        "group_name": "",
+        "skidka_category_link": "https://skidka7.com/discount/dom/all",
+        "group_name": "Home",
+        "tg_group_id": "1553355442",
         "scheduler": scheduler_home,
     },
 }
