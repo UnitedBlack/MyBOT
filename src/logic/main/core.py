@@ -18,33 +18,6 @@ class ScrapyCore:
         self.scheduler = scheduler
         self.tg_group_id = tg_group_id
 
-    def append_data_to_db(self, wb_id, status):
-        post_exist = service_db.is_post_in_db(wb_id, group_name=self.group_name)
-        if post_exist:
-            service_db.update_post_status(
-                id=wb_id, status=status, group_name=self.group_name
-            )
-        elif post_exist == False:
-            data = Posts(wb_id=wb_id, status=status, group_name=self.group_name)
-            service_db.add_post(
-                data=data,
-                table_name=Posts,
-            )
-
-    async def get_data_from_db(self, model: Union[Posts | Products], session):
-        if model == Posts:
-            data = await service_db.get_all_posts(
-                db_session=session,
-                group_name=self.group_name,
-            )
-
-        elif model == Products:
-            data = await service_db.get_all_products(
-                db_session=session,
-                group_name=self.group_name,
-            )
-        return data
-
     def wbparse(self):
         all_products = service_db.get_all_products(group_name=self.group_name)
         tg_posts = service_db.get_all_posts(group_name=self.group_name)
@@ -81,3 +54,30 @@ class ScrapyCore:
             if len(pic_url) >= 80:
                 pic_url = ast.literal_eval(pic_url)
             return post, pic_url, url
+
+def append_data_to_db(wb_id, status, group_name):
+    post_exist = service_db.is_post_in_db(wb_id, group_name=group_name)
+    if post_exist:
+        service_db.update_post_status(
+            id=wb_id, status=status, group_name=group_name
+        )
+    elif post_exist == False:
+        data = Posts(wb_id=wb_id, status=status, group_name=group_name)
+        service_db.add_post(
+            data=data,
+            table_name=Posts,
+        )
+
+async def get_data_from_db(model: Union[Posts | Products], session, group_name):
+    if model == Posts:
+        data = await service_db.get_all_posts(
+            db_session=session,
+            group_name=group_name,
+        )
+
+    elif model == Products:
+        data = await service_db.get_all_products(
+            db_session=session,
+            group_name=group_name,
+        )
+    return data

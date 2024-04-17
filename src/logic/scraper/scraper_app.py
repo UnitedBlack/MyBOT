@@ -6,7 +6,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
-from parse_skidka import skidka_site_parser
+from logic.scraper.parse_skidka import run_spider
 
 
 def operate_image(video_locator: bool):
@@ -164,7 +164,7 @@ def parse_wildberries(
 
 def start_scraper(skidka_link: str):
     global driver
-    links = skidka_site_parser()
+    links = run_spider()
     try:
         options = Options()
         options.add_argument("--headless")

@@ -14,13 +14,14 @@ from database.models import Products, Posts
 start_menu_router = Router()
 start_menu_router.message.filter(IsAdmin())
 
-
 class StartMenuStates(StatesGroup):
     start = State()
 
+def get_scrapy(skidka_category_link, group_name, scheduler, tg_group_id):        
+    return ScrapyCore()
 
 @start_menu_router.message(StateFilter("*"), F.text == "Назад")
-async def main_menu(message: types.Message, session: AsyncSession):
+async def main_menu(message: types.Message, session: AsyncSession, scheduler = None):
     try:
         products = await scrapy_core.get_data_from_db(model=Products, session=session)
         posts = await scrapy_core.get_data_from_db(model=Posts, session=session)
@@ -49,21 +50,8 @@ async def main_menu(message: types.Message, session: AsyncSession):
 @start_menu_router.message(StateFilter("*"), F.text == "Одежда тпшкам")
 @start_menu_router.message(StateFilter("*"), F.text == "Для дома")
 @start_menu_router.message(StateFilter("*"), F.text == "Бижутерия")
-async def state_router(message: types.Message, session: AsyncSession):
-    global skidka_link, scheduler, tg_group_id, group_name, scrapy_core
-    print(message.text)
-    config = categories.get(message.text)
-    if config:
-        skidka_link = config["skidka_category_link"]
-        group_name = config["group_name"]
-        scheduler = config["scheduler"]
-        tg_group_id = config["tg_group_id"]
-        scrapy_core = ScrapyCore(
-            skidka_link,
-            group_name,
-            scheduler,
-            tg_group_id,
-        )
+async def state_router(message: types.Message, session: AsyncSession, group_name: str):
+    if group_name:
         await main_menu(message, session)
     else:
         await message.answer("Не работает")

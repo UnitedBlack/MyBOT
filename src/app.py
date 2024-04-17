@@ -1,11 +1,10 @@
 import asyncio
 import os
 from aiogram import Bot, Dispatcher
-from config import TOKEN
-
+from config import TOKEN, categories
 from handlers.start_menu import start_menu_router
-
 from handlers.main_menu import main_menu_router
+
 # from handlers.callbacks import callback_handler_router
 # from handlers.clear_database import clear_database_router
 # from handlers.custom_post_menu import custom_post_menu_router
@@ -14,6 +13,7 @@ from handlers.main_menu import main_menu_router
 # from handlers.errors import error_handler_router
 
 from middlewares.db import DatabaseSession
+from middlewares.user_config import ConfigurationMiddleware
 
 from database.engine import create_db, session_maker
 
@@ -48,6 +48,7 @@ async def on_startup(bot):
 async def main():
     dp.startup.register(on_startup)
     dp.update.middleware(DatabaseSession(session_pool=session_maker))
+    dp.update.middleware(ConfigurationMiddleware())
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)  # allowed_updates = ALLOWED_UPDATES
 
